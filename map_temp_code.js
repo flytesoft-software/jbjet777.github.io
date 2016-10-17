@@ -269,12 +269,12 @@ class MaterialAddons
         
         this.getHeaderHeight = function()
         {
-            return header.height();
+            return header.outerHeight(true);
         };
         
         this.getFooterHeight = function()
         {
-            return footer.height();
+            return footer.outerHeight(true);
         };
         
         this.getPages = function()
