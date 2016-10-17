@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-var MaterialAddons = class 
+class MaterialAddons 
 {
     constructor()
     {
@@ -12,21 +12,21 @@ var MaterialAddons = class
         const TAB_SWIPE_TRIGGER = 0.5;
         const START_DELAY = 100;
         
-        var layOut = document.querySelector('.mdl-layout');;
-        var mainPage = $("main");
-        var header = $("header");
-        var footer = $("footer");
-        var drawerToggleCalled = false;
-        var screenWidth = geContentWidth();
-        var pageCount = getPageCount();
-        var pageIndex = getCurrentPageIndex();
-        var swipeOccurring = false;
-        var swipeOff = false;
+        let layOut = document.querySelector('.mdl-layout');;
+        let mainPage = $("main");
+        let header = $("header");
+        let footer = $("footer");
+        let drawerToggleCalled = false;
+        let screenWidth = geContentWidth();
+        let pageCount = getPageCount();
+        let pageIndex = getCurrentPageIndex();
+        let swipeOccurring = false;
+        let swipeOff = false;
                
-        var privPages = $("section");    
-        var privTabs = $("header a");
+        let privPages = $("section");    
+        let privTabs = $("header a");
         
-        var disabledPages = [];
+        let disabledPages = [];
         
         bindEvents();
         delayedStart();
@@ -151,13 +151,13 @@ var MaterialAddons = class
 
                             currentPage.addClass("eclipse-content-swipe-out-right");
 
-                            currentPage.animationEnd(function (event)
+                            currentPage.animationEndOne(function (event)
                             {
                                 console.log("First animation ended.");
                                 currentPage.removeClass("eclipse-content-swipe-out-right");
                                 nextPage.addClass("eclipse-content-swipe-in-right");
                                 privTabs[pageIndex - 1].click();
-                                nextPage.animationEnd(function (event)
+                                nextPage.animationEndOne(function (event)
                                 {
                                     console.log("Second animation ended.");
                                     nextPage.removeClass("eclipse-content-swipe-in-right");
@@ -185,13 +185,13 @@ var MaterialAddons = class
                         
                         currentPage.addClass("eclipse-content-swipe-out-left");
                         
-                        currentPage.animationEnd(function(event)
+                        currentPage.animationEndOne(function(event)
                         {
                             console.log("First animation ended.");
                             currentPage.removeClass("eclipse-content-swipe-out-left");
                             nextPage.addClass("eclipse-content-swipe-in-left");
                             privTabs[pageIndex + 1].click();
-                            nextPage.animationEnd(function(event)
+                            nextPage.animationEndOne(function(event)
                             {                            
                                 console.log("Second animation ended.");
                                 nextPage.removeClass("eclipse-content-swipe-in-left");
@@ -317,16 +317,15 @@ var MaterialAddons = class
         
         this.enableHideHeader = function(pages)
         {
-            // TODO: Enable / disable show/hide footer code.
             this.disableHideHeader();
             
             if(typeof(pages) === "undefined")
             {
-                privPages.click(onToggleClick);
+                privPages.longPress(onToggleClick);
             }
             else if(typeof(pages) === "number")
             {
-                $(privPages[pages]).click(onToggleClick);
+                $(privPages[pages]).longPress(onToggleClick);
             }
             else if(typeof(pages) === "object")
             {
@@ -336,24 +335,38 @@ var MaterialAddons = class
                     {
                         if(typeof(item) === "number")
                         {
-                            $(privPages[item]).click(onToggleClick);
+                            $(privPages[item]).longPress(onToggleClick);
                         }
                     });
                 }
                 else
                 {
-                    privPages.click(onToggleClick);
+                    privPages.longPress(onToggleClick);
                 }
             }
             else
             {
-                privPages.click(onToggleClick);
+                privPages.longPress(onToggleClick);
             }
         };
         
         this.disableHideHeader = function()
         {
-            privPages.clickOff();
+            privPages.longPressOff();
+        };
+        
+        this.getPageIndex = function()
+        {
+            return getCurrentPageIndex();
+        };
+        
+        this.onPageChange = function(func)
+        {
+            mainPage.animationEnd(function(event)
+            {
+                event.currentPageIdx = getCurrentPageIndex();
+                func(event);
+            });
         };
     
     }
@@ -365,22 +378,32 @@ var MaterialAddons = class
 };
 
 $(function()
-{    
-    var material = new MaterialAddons;
+{
+    const MAP_PAGE_IDX = 1;
+    let material = new MaterialAddons;
     
-    var pages = material.getPages();
-    var jMap = $("#map");
-    var map = L.map('map');
+    let pages = material.getPages();
+    let jMap = $("#map");
+    let map = L.map('map');
     
     material.disableSwipe(1);
     material.enableHideHeader(1);
     
-    var headerHeight = material.getHeaderHeight();
-    var footerHeight = material.getFooterHeight();
-    var screenHeight = $(window).height();
-    var mapHeight = screenHeight - headerHeight - footerHeight;
+    let headerHeight = material.getHeaderHeight();
+    let footerHeight = material.getFooterHeight();
+    let screenHeight = $(window).height();
+    let mapHeight = screenHeight - headerHeight - footerHeight;
     
     jMap.height(mapHeight);
+    
+    material.onPageChange(function(event)
+    {
+        if(MAP_PAGE_IDX === event.currentPageIdx)
+        {
+            map.invalidateSize();
+            console.log("Map size change on page: " + event.currentPageIdx);
+        }
+    });
     
     material.onHeaderChange(function(even)
     {

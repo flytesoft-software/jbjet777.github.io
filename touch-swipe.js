@@ -6,14 +6,53 @@
 
 jQuery.fn.extend(
 {
-    animationEnd: function(callback)
+    animationEndOne: function(callback)
     {
         return $(this).one("animationend", callback);
+    },
+    
+    animationEnd: function(callback)
+    {
+        return $(this).on("animationend", callback);
     },
     
     clickOff: function(callback)
     {
         return $(this).off("click", callback);
+    },
+    
+    longPress: function(callback)
+    {
+        let pressTimer = null;
+        let fn = callback;
+        
+        $(this).on("touchend mouseup", function(callback)
+        {
+            if(pressTimer)
+            {
+                window.clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+        });
+        
+        $(this).on("touchstart mousedown", function(callback)
+        {
+            if(pressTimer)
+            {
+                window.clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+            pressTimer = window.setTimeout(function()
+            {
+                fn(event);
+            }, 1000);
+        });
+    },
+    
+    longPressOff: function(callback)
+    {
+        $(this).off("touchend mouseup", callback);
+        return $(this).off("touchstart mousedown", callback);
     },
     
     transitionEndOne: function(callback)
@@ -63,7 +102,7 @@ jQuery.fn.extend(
             $(this).off("mousemove");
         });        
         
-        return this;
+        return $(this);
     },
     
     swipe: function(callback) 
@@ -145,7 +184,7 @@ jQuery.fn.extend(
             }
         });
         
-        return this;
+        return $(this);
     },
     
     swipeOff: function(callback) 
