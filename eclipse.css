@@ -1,0 +1,271 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Sep 16, 2016, 5:02:33 PM
+    Author     : Josh
+*/
+
+
+.no-eclipse-icon 
+{
+    color: transparent !important;
+    background: url("images/no-eclipse.png");
+    background-size: contain;
+}
+
+.annular-eclipse-icon 
+{
+    color: transparent !important;
+    background:url("images/annular.png");
+    background-size: contain;
+}
+
+.hybrid-eclipse-icon 
+{
+    color: transparent !important;
+    background:url("images/hybrid.png");
+    background-size: contain;
+}
+
+.total-eclipse-icon 
+{
+    color: transparent !important;
+    background:url("images/total.png");
+    background-size: contain;
+}
+
+.partial-eclipse-icon 
+{
+    color: transparent !important;
+    background:url("images/partial.png");
+    background-size: contain;
+}
+
+.eclipse-table
+{
+    width: 98%;
+    margin-right: auto;
+    margin-left: auto;
+    margin-bottom: 0.5em;
+    padding: 12px 10px;
+}
+
+.eclipse-font-default
+{
+    color: rgba(0,0,0,.87);
+    font-size: 13px;
+    font-family: "Helvetica","Arial",sans-serif;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.eclipse-content-swipe-in-right
+{
+    animation-name: content-animation-swipe-in-right;
+    animation-duration: .3s;
+    position: relative;
+}
+
+@keyframes content-animation-swipe-in-right
+{
+    0%   {right: 100vw;}
+    100% {right: 0vw;}
+}
+
+.eclipse-content-swipe-out-right
+{
+    animation-name: content-animation-swipe-out-right;
+    animation-duration: .15s;
+    position: relative;
+}
+
+@keyframes content-animation-swipe-out-right
+{
+    0%   {left: 50vw;}
+    100% {left: 100vw;}
+}
+
+.eclipse-content-swipe-out-right-full
+{
+    animation-name: content-animation-swipe-out-right-full;
+    animation-duration: .3s;
+    position: relative;
+}
+
+@keyframes content-animation-swipe-out-right-full
+{
+    0%   {left: 0vw;}
+    100% {left: 100vw;}
+}
+
+.eclipse-content-swipe-out-left
+{
+    animation-name: content-animation-swipe-out-left;
+    animation-duration: .15s;
+    position: relative;
+}
+
+@keyframes content-animation-swipe-out-left
+{
+    0%   {right: 50vw;}
+    100% {right: 100vw;}
+}
+
+.eclipse-content-swipe-out-left-full
+{
+    animation-name: content-animation-swipe-out-left-full;
+    animation-duration: .3s;
+    position: relative;
+}
+
+@keyframes content-animation-swipe-out-left-full
+{
+    0%   {right: 0vw;}
+    100% {right: 100vw;}
+}
+
+.eclipse-content-swipe-in-left
+{
+   
+    animation-name: content-animation-swipe-in-left;
+    animation-duration: .3s;
+    position: relative;
+}
+
+@keyframes content-animation-swipe-in-left
+{
+    0%   {left: 100vw;}
+    100% {left: 0vw;}
+}
+
+.eclipse-content-fade-in
+{
+    animation-name: content-animation;
+    animation-duration: .5s;
+    animation-timing-function: ease-out;
+}
+
+@keyframes content-animation 
+{
+    0%   {opacity: 0;}
+    100% {opactiy: 1;}
+}
+
+.eclipse-header
+{
+    top: -120px;
+    position: relative;
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-header-transition
+{
+    top: 0px;
+}
+
+.eclipse-footer
+{
+    padding-top: 12px; 
+    padding-bottom: 12px;
+    position: absolute !important;
+    bottom: -72px;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1 !important;
+    
+    transition-property: bottom;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-footer-transition
+{
+    bottom: 0px;
+}
+
+@keyframes footer-animation 
+{
+    0%   {bottom: -72px;}
+    100% {bottom: 0px;}
+}
+
+.eclipse-footer-list
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.eclipse-td
+{
+    max-width: 1em;    
+}
+
+/* Update as nessary so all content will be seen with fixed footer. */
+.eclipse-bottom-pad
+{
+    padding-top: 12px; 
+    padding-bottom: 12px;
+    color: transparent;
+    background-color: inherit;
+}
+
+.eclipse-choice-date
+{
+    display: inline !important;
+}
+
+.eclipse-choice-buttons
+{
+    margin-left: 2.0em;
+}
+
+.eclipse-choice-list
+{
+    width: 99%;
+    overflow: hidden;
+    overflow-y: scroll;
+    flex-grow: 3;
+}
+
+.eclipse-selected
+{
+    background-color: threedlightshadow;
+}
+
+.bottom-drawer-items
+{
+    flex-grow: 1;
+}
+
+.drawer-cointainer
+{
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.eclipse-drawer
+{
+    overflow: hidden;
+}
+
+.eclipse-map
+{
+    height: 100vh;
+    width: 100vw;
+}
+
+.header-shrink
+{
+    min-height: 0px !important;
+    height: 0px !important;
+}

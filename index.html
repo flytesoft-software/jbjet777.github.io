@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Eclipse Chaser Mobile!</title>
+        <meta charset="UTF-8">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+        <link rel="apple-touch-icon" href="images/favicon.png" />
+        <link rel="icon" type="image/png" href="images/favicon.png" />
+        
+        <!-- jQuery API -->
+        <script src="jquery/jquery-3.1.1.min.js"></script>
+        <script src="touch-swipe.js"></script>
+
+        <!-- Material Light API -->
+        <link rel="stylesheet" href="material/material.min.css">
+        <script src="material/material.min.js"></script>
+        <link rel="stylesheet" href="material/fonts.css">
+        
+        <!-- LeafletJS API -->
+        <link rel="stylesheet" href="leaflet/leaflet.css" />
+        <script src="leaflet/leaflet.js"></script>
+        
+        <!-- Eclipse Chaser Stylesheets -->
+        <link rel="stylesheet" href="eclipse.css">
+        
+        <script src="map_temp_code.js"></script>
+    </head>
+
+    <body>
+        <!-- Simple header with fixed tabs. -->
+        <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
+            <header class="mdl-layout__header eclipse-header">
+                <div class="mdl-layout__header-row">
+                    <!-- Title -->
+                    <span class="mdl-layout-title">Eclipse Chaser Mobile!</span>
+                </div>
+                <!-- Tabs -->
+                <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
+                    <a id="circumstance-select" href="#circumstances-tab" class="mdl-layout__tab is-active">Circumstances</a>
+                    <a id="map-select" href="#map-tab" class="mdl-layout__tab">Map</a>
+                    <a id="simulation-select" href="#simulation-tab" class="mdl-layout__tab">Simulation</a>
+                </div>
+            </header>
+            <!-- Simple header with fixed tabs. END -->
+
+            <!-- APP DRAWER -->
+            <div class="mdl-layout__drawer eclipse-drawer">
+                <span class="mdl-layout-title">Choose Eclipse</span>
+
+                <div class="drawer-cointainer">
+                    <!-- ECLIPSE CHOICE LIST -->
+                    <ul class="mdl-list eclipse-choice-list">
+                        <li class="mdl-list__item mdl-list__item--two-line eclipse-selected">
+                            <span class="mdl-list__item-primary-content">
+                                <i class="total-eclipse-icon mdl-list__item-avatar">Total Eclipse</i>
+                                <span>Total Eclipse</span>
+                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
+                            </span>
+                        </li>
+                        <li class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                                <i class="partial-eclipse-icon mdl-list__item-avatar">Partial Eclipse</i>
+                                <span>Partial Eclipse</span>
+                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
+                            </span>
+                        </li>
+                        <li class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                                <i class="annular-eclipse-icon mdl-list__item-avatar">Annular Eclipse</i>
+                                <span>Annular Eclipse</span>
+                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
+                            </span>
+                        </li>
+                        <li class="mdl-list__item mdl-list__item--two-line">
+                            <span class="mdl-list__item-primary-content">
+                                <i class="hybrid-eclipse-icon mdl-list__item-avatar">Hybrid Eclipse</i>
+                                <span>Hybrid Eclipse</span>
+                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
+                            </span>
+                        </li>
+                    </ul>
+                    <!-- ECLIPSE CHOICE LIST END -->
+
+                    <!-- NEXT ECLIPSE BUTTONS -->
+                    <div class="bottom-drawer-items">
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">&nbsp;&nbsp;Next&nbsp;</button>
+                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">Visible</button>
+
+                        <!-- NEXT ECLIPSE BUTTONS END -->
+
+                        <!-- Eclipse Chaser Version Text -->
+                        <ul class="mdl-list">
+                            <li class="mdl-list__item mdl-list__item--two-line">
+                                <span class="mdl-list__item-primary-content">
+                                    <span>Eclipse Chaser</span>
+                                    <span class="mdl-list__item-sub-title">v3.0.0 Beta</span>
+                                </span>
+                            </li>
+                        </ul>
+                        <!-- Eclipse Chaser Version Text END -->
+                    </div>
+                </div>
+            </div>
+            <!-- APP DRAWER END -->
+
+            <!-- APP CONTENT -->
+            <main class="mdl-layout__content">
+
+                <!-- CIRCUMSTANCES CONTENT -->
+                <section class="mdl-layout__tab-panel is-active eclipse-content-fade-in" id="circumstances-tab">
+                    <div id="circumstances" class="page-content">
+
+                        <!-- ECLIPSE TYPE LIST -->
+                        <ul class='mdl-list__item mdl-list__item--two-line'>
+                            <li class="mdl-list__item">
+                                <span class="mdl-list__item-primary-content">
+                                    <i class="material-icons mdl-list__item-avatar no-eclipse-icon">No Eclipse</i>
+                                    <span>No Eclipse Occurs</span>
+                                    <span class="mdl-list__item-sub-title">August 21, 2017</span>
+                                </span>
+                            </li>
+                        </ul>
+                        <!-- ECLIPSE TYPE LIST END -->
+
+                        <!-- ECLIPSE CIRCUMSTANCES TABLE-->
+                        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table">
+                            <thead>
+                                <tr>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Coverage</span><br><span class="eclipse-font-default">100.0%</span></th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Magnitude</span><br><span class="eclipse-font-default">101.0%</span></th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Depth</span><br><span class="eclipse-font-default">76.8% S</span></th>
+                                </tr>
+                            </thead>
+                        </table>
+
+                        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table">
+                            <thead>
+                               <tr>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td">Start Time</th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td">Countdown</th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td">Duration</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunrise</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Partial Phase Begins</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>3:00:00</span></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Total Phase Begins</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>7:31</span></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Mid Eclipse At</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Total Phase Ends</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                </tr>
+
+                               <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Partial Phase Ends</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                </tr>
+
+                                <tr>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunset</span><br><span>12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <!-- ECLIPSE CIRCUMSTANCES TABLE END -->
+                    </div>
+                </section>
+                <!-- CIRCUMSTANCES CONTENT END -->
+
+                <!-- MAP CONTENT -->
+                <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="map-tab">
+                    <div id="map" class="page-content eclipse-map">
+                       
+                    </div>              
+                </section>
+                <!-- MAP CONTENT END -->
+
+                <!-- SIMULATION CONTENT -->
+                <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="simulation-tab">
+                    <div class="page-content">
+                        <h2>Simulation here.</h2>
+                        
+                    </div>
+                </section>
+                <!-- SIMULATION CONTENT END -->
+
+                <!-- HACK TO MAKE CONTENT VISIBLE WITH FOOTER -->
+                <div class="eclipse-bottom-pad">
+                    <ul class="mdl-mini-footer__link-list eclipse-footer-list">
+                        <li><a href="#">Lat<br>00.00</a></li>
+                        <li><a href="#"></a></li>
+                        <li><a href="#">Long<br>000.00</a></li>
+                        <li><a href="#"></a></li>
+                        <li><a href="#">Alt<br>-0000 ft</a></li>
+                        <li><a href="#"></a></li>
+                        <li><a href="#">Time<br>12:00:00PM</a></li>
+                    </ul>
+                </div>
+                <!-- HACK TO MAKE CONTENT VISIBLE WITH FOOTER  END-->
+                
+            </main>
+            <!-- APP CONTENT END -->
+
+            <!-- FIXED FOOTER -->
+            <footer class="mdl-mini-footer eclipse-footer">
+                <ul class="mdl-mini-footer__link-list eclipse-footer-list">
+                    <li><a href="#">Lat<br>00.00</a></li>
+                    <li><a href="#"></a></li>
+                    <li><a href="#">Long<br>000.00</a></li>
+                    <li><a href="#"></a></li>
+                    <li><a href="#">Alt<br>-0000 ft</a></li>
+                    <li><a href="#"></a></li>
+                    <li><a href="#">Time<br>12:00:00PM</a></li>
+                </ul>
+            </footer>
+            <!-- FIXED FOOTER END -->
+
+        </div>
+    </body>
+</html>
