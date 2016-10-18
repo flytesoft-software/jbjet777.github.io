@@ -4,6 +4,8 @@
  * and open the template in the editor.
  */
 
+"use strict";
+
 jQuery.fn.extend(
 {
     animationEndOne: function(callback)

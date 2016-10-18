@@ -167,7 +167,7 @@ and open the template in the editor.
 
 .eclipse-header-transition
 {
-    top: 0px;
+    top: 0px !important;
 }
 
 .eclipse-footer
@@ -188,7 +188,7 @@ and open the template in the editor.
 
 .eclipse-footer-transition
 {
-    bottom: 0px;
+    bottom: 0px !important;
 }
 
 @keyframes footer-animation 
