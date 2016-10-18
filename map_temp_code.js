@@ -10,25 +10,25 @@ class MaterialAddons
 {
     constructor()
     {
-        const DRAWER_SWIPE_TRIGGER = 0.15;
-        const TAB_SWIPE_TRIGGER = 0.5;
-        const START_DELAY = 100;
+        var DRAWER_SWIPE_TRIGGER = 0.15;
+        var TAB_SWIPE_TRIGGER = 0.5;
+        var START_DELAY = 100;
         
-        let layOut = document.querySelector('.mdl-layout');;
-        let mainPage = $("main");
-        let header = $("header");
-        let footer = $("footer");
-        let drawerToggleCalled = false;
-        let screenWidth = geContentWidth();
-        let pageCount = getPageCount();
-        let pageIndex = getCurrentPageIndex();
-        let swipeOccurring = false;
-        let swipeOff = false;
+        var layOut = document.querySelector('.mdl-layout');;
+        var mainPage = $("main");
+        var header = $("header");
+        var footer = $("footer");
+        var drawerToggleCalled = false;
+        var screenWidth = geContentWidth();
+        var pageCount = getPageCount();
+        var pageIndex = getCurrentPageIndex();
+        var swipeOccurring = false;
+        var swipeOff = false;
                
-        let privPages = $("section");    
-        let privTabs = $("header a");
+        var privPages = $("section");    
+        var privTabs = $("header a");
         
-        let disabledPages = [];
+        var disabledPages = [];
         
         bindEvents();
         delayedStart();
@@ -381,20 +381,20 @@ class MaterialAddons
 
 $(function()
 {
-    const MAP_PAGE_IDX = 1;
-    let material = new MaterialAddons;
+    var MAP_PAGE_IDX = 1;
+    var material = new MaterialAddons;
     
-    let pages = material.getPages();
-    let jMap = $("#map");
-    let map = L.map('map');
+    var pages = material.getPages();
+    var jMap = $("#map");
+    var map = L.map('map');
     
     material.disableSwipe(1);
     material.enableHideHeader(1);
     
-    let headerHeight = material.getHeaderHeight();
-    let footerHeight = material.getFooterHeight();
-    let screenHeight = $(window).height();
-    let mapHeight = screenHeight - headerHeight - footerHeight;
+    var headerHeight = material.getHeaderHeight();
+    var footerHeight = material.getFooterHeight();
+    var screenHeight = $(window).height();
+    var mapHeight = screenHeight - headerHeight - footerHeight;
     
     jMap.height(mapHeight);
     

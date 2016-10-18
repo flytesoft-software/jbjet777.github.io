@@ -25,8 +25,8 @@ jQuery.fn.extend(
     
     longPress: function(callback)
     {
-        let pressTimer = null;
-        let fn = callback;
+        var pressTimer = null;
+        var fn = callback;
         
         $(this).on("touchend mouseup", function(callback)
         {
@@ -117,7 +117,7 @@ jQuery.fn.extend(
             currentX = 0,
             currentY = 0;
         var swipeType = "none";
-        const SWIPE_THRESHOLD = 25;
+        var SWIPE_THRESHOLD = 25;
     
         $(this).touchStart(function(event)
         {
