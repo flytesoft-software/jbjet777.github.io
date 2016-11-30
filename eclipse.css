@@ -286,7 +286,7 @@ and open the template in the editor.
 {
     z-index: 9999;
     position: fixed;
-    bottom: 8em;
+    bottom: 9em;
     right: -15vw;
     
     transition-property: all;

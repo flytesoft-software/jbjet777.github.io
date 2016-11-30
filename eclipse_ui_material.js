@@ -46,6 +46,7 @@ class EclipseUI
         var nextVisibleEclipse = -1;
         var manualMode = true;
         var mapPositionLock = true;
+        var tempIgnoreLock = false;
 
         var jMap = $("#map");
         var map = L.map('map');
@@ -248,12 +249,14 @@ class EclipseUI
             
             map.on("dragstart", function(ev)
             {
+                tempIgnoreLock = true;
                 console.log("Drag started.");
                 
             });
             
             map.on("dragend", function(ev)
             {
+                tempIgnoreLock = false;
                 if(ev.distance > IGNORE_DRAG)
                 {
                     mapPositionLock = false;
@@ -821,7 +824,7 @@ class EclipseUI
                         
             locationMarker.setLatLng(L.latLng(currentCoords.latitude, currentCoords.longitude));
             
-            if(mapPositionLock)
+            if(mapPositionLock && !tempIgnoreLock)
             {
                 map.panTo(L.latLng(currentCoords.latitude, currentCoords.longitude));
             }
