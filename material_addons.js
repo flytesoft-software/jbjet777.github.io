@@ -12,29 +12,52 @@ class MaterialAddons
     {
         var DRAWER_SWIPE_TRIGGER = 0.15;
         var TAB_SWIPE_TRIGGER = 0.5;
-        var START_DELAY = 100;
+        var START_DELAY = 300;
         
         var layOut = document.querySelector('.mdl-layout');;
         var mainPage = $("main");
         var header = $("header");
         var footer = $("footer");
+        var mapButtons = $("#map-buttons");
+        var privPages = $("section");    
+        var privTabs = $("header a");
+        var appDrawer = $(".mdl-layout__drawer");
+        
+        var spinner = $(".mdl-spinner");
+                
         var drawerToggleCalled = false;
         var screenWidth = geContentWidth();
         var pageCount = getPageCount();
         var pageIndex = getCurrentPageIndex();
         var swipeOccurring = false;
         var swipeOff = false;
-               
-        var privPages = $("section");    
-        var privTabs = $("header a");
         
         var disabledPages = [];
         
+        var nav = navigator;
+        
+        addCustomScroller();
         bindEvents();
         delayedStart();
         
+        function addCustomScroller()
+        {
+            var userStr = navigator.userAgent.toLowerCase();
+            
+            if((userStr.indexOf("windows") > -1 || userStr.indexOf("macintosh") > -1) || (userStr.indexOf("linux") > -1 && userStr.indexOf("android") === -1))
+            {
+                console.log("Running on desktop browser.");
+                $("head").append("<style>::-webkit-scrollbar{ width: 9px; height: 9px;} ::-webkit-scrollbar-thumb { background: #ccc;}</style>");
+            }
+            else
+            {
+                console.log("Running on mobile browser.");
+            }
+        }
+        
         function delayedStart()
         {
+            // TODO: FIXME: This is a hacky fix, want to know when entire DOM has been MDL upgraded.
             window.setTimeout(function()
             {
                 showHeaderFooter();
@@ -113,12 +136,19 @@ class MaterialAddons
             $( window ).resize(onResize);
             swipeOn();
             privTabs.click(onTabClick);
+            appDrawer.swipe(onDrawerSipe);
+        }
+        
+        function onDrawerSipe(event)
+        {
+            if(event.swipeType === "left")
+            {
+                layOut.MaterialLayout.toggleDrawer();
+            }
         }
     
         function onSwipe(event)
         {
-            // console.log("Screen: " + screenWidth + " Swiping: " + event.swipeType + " startX: " + event.startX + " startY: " + event.startY + " Current: " + event.swipeX + ", " + event.swipeY);
-            
             if(event.swipeType === "right")
             {
                 if(event.startX < (DRAWER_SWIPE_TRIGGER * screenWidth)) // Very close to left side of screen, open nav drawer.
@@ -222,7 +252,7 @@ class MaterialAddons
         function onTouchEnd()
         {
             console.log("Touch ended.");
-            $(privPages).removeAttr("style");
+            privPages.css({ position: '' }); // Delete position value if it was used during swipe event.
             drawerToggleCalled = false;
             swipeOccurring = false;
         }
@@ -245,6 +275,8 @@ class MaterialAddons
             
             footer.addClass("eclipse-footer-transition");
             footer.removeClass("header-shrink");
+            
+            mapButtons.addClass("eclipse-map-button-placement-transition");
         }
         
         function removeHeaderFooter()
@@ -254,6 +286,8 @@ class MaterialAddons
             
             footer.removeClass("eclipse-footer-transition");
             footer.addClass("header-shrink");
+            
+            mapButtons.removeClass("eclipse-map-button-placement-transition");
         }
         
         this.onHeaderChange = function(func)
@@ -271,7 +305,7 @@ class MaterialAddons
         
         this.getHeaderHeight = function()
         {
-            return header.outerHeight(true);
+            return header.height();
         };
         
         this.getFooterHeight = function()
@@ -370,6 +404,64 @@ class MaterialAddons
                 func(event);
             });
         };
+        
+        this.showSpinner = function()
+        {
+            spinner.removeClass("is-active");
+            spinner.addClass("is-active");           
+        };
+        
+        this.hideSpinner = function()
+        {
+            spinner.removeClass("is-active");
+            spinner.addClass("zero-height");
+        };
+        
+        /* Tests whether the app drawer is open/visible.
+         * @returns {Boolean} 
+         */
+        this.isDrawerOpen = function()
+        {
+            return appDrawer.hasClass("is-visible");            
+        };
+        
+        /* Fired when drawer is opened.
+         * @param {Function} callback  -- Function to be called when drawer is opened.
+         * @returns {Undefined}  
+         */
+        this.onDrawerOpen = function(callback)
+        {
+            appDrawer.transitionEnd((function(event)
+            {
+                if(this.isDrawerOpen())
+                {
+                    callback(event);
+                }
+            }).bind(this));
+        };
+        
+        /* Fired when drawer is closed.
+         * @param {Function} callback  -- Function to be called when drawer is closed.
+         * @returns {Undefined}  
+         */
+        this.onDrawerClosed = function(callback)
+        {
+            appDrawer.transitionEnd((function(event)
+            {
+                if(!this.isDrawerOpen())
+                {
+                    callback(event);
+                }
+            }).bind(this));
+        };
+        
+        /* Toggle app nav drawer open or close.
+         * @returns {Undefined} 
+         */
+        this.toggleDrawer = function()
+        {
+            layOut.MaterialLayout.toggleDrawer();
+        };
     
     }
     
@@ -379,65 +471,140 @@ class MaterialAddons
     }
 };
 
-$(function()
+
+/* Create a dialog box
+ * @param {String} title -- The title of the Dialog Box.
+ * @param {String} description -- Description field of dialog box. 
+ * @param {String} okText -- Text for OK button
+ * @param {String} cancelText -- Text for close button   
+ * @type Object
+ */
+class DialogBox
 {
-    var MAP_PAGE_IDX = 1;
-    var material = new MaterialAddons;
-    
-    var pages = material.getPages();
-    var jMap = $("#map");
-    var map = L.map('map');
-    
-    material.disableSwipe(1);
-    material.enableHideHeader(1);
-    
-    var headerHeight = material.getHeaderHeight();
-    var footerHeight = material.getFooterHeight();
-    var screenHeight = $(window).height();
-    var mapHeight = screenHeight - headerHeight - footerHeight;
-    
-    jMap.height(mapHeight);
-    
-    material.onPageChange(function(event)
+    constructor(/* String */ title, /* String */ description, /* String */ okText, /* String */ closeText)
     {
-        if(MAP_PAGE_IDX === event.currentPageIdx)
+        var dialog = $('#diag');
+        var okButton = $("#ok_button");
+        var closeButton = $("#close_button");
+        var diagTitle = $("#diag_title");
+        var diagDescription = $("#diag_description");
+        var okCallBack = null;
+        var closeCallBack = null;
+        
+        componentHandler.upgradeElement(dialog[0]);
+        
+        if (!dialog[0].showModal)
         {
-            map.invalidateSize();
-            console.log("Map size change on page: " + event.currentPageIdx);
+            dialogPolyfill.registerDialog(dialog[0]);
         }
-    });
-    
-    material.onHeaderChange(function(even)
-    {
-        console.log("Header change.");
-        headerHeight = material.getHeaderHeight();
-        footerHeight = material.getFooterHeight();
-        mapHeight = screenHeight - headerHeight - footerHeight;
-        jMap.height(mapHeight);
-        map.invalidateSize();
-    });
-    
-    $(window).resize(function(event)
-    {
-        console.log("Window height change.");
-        screenHeight = $(window).height();
-        mapHeight = screenHeight - headerHeight - footerHeight;
-        jMap.height(mapHeight); 
-    });
-    
-    pages.each(function(index)
-    {
-        console.log("Page: " + this.id);
-    });
-    
-    map.setView([34, -118], 4);
-    
-    
-    
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-});
-
+        
+        resetState();
+                
+        if(title)
+        {
+            diagTitle.html(title);
+        }
+        if(description)
+        {
+            diagDescription.html(description);
+        }
+        if(okText)
+        {
+            okButton.html(okText);
+        }
+        if(closeText)
+        {
+            closeButton.html(closeText);
+        }
+        
+        function close()
+        {
+            dialog[0].close();
+            
+            // Dialog.close() Bug fix see: https://github.com/google/material-design-lite/issues/4328
+            // TODO: Remove with MDL 2.x.x
+            document.querySelector('.mdl-layout__content').style.overflowX = 'auto';
+            document.querySelector('.mdl-layout__content').style.overflowX = '';
+            
+            okButton.clickOff();
+            closeButton.clickOff();
+        }
+        
+        function resetState()
+        {
+            diagTitle.html("Error");
+            diagDescription.html("An error occured.");
+            okButton.html("OK");
+            closeButton.html("Close");
+            
+            okButton.show();
+            closeButton.show();
+        }
+        
+        okButton.click(function(event)
+        {
+            console.log("OK close called.");
+            close();
+            if(okCallBack)
+            {
+                return okCallBack(event);
+            }
+        });
+        
+        closeButton.click(function(event)
+        {
+            console.log("CLOSE close called.");
+            close();
+            if(closeCallBack)
+            {
+                return closeCallBack(event);
+            }
+        });
+        
+        this.hideOKButton = function()
+        {
+            okButton.hide();
+        };
+        
+        this.hideCloseButton = function()
+        {
+            closeButton.hide();
+        };
+        
+        this.showModal = function()
+        {
+            dialog[0].showModal();
+        };
+        
+        this.setTitleText = function(/* String */ text)
+        {
+            diagTitle.html(text);
+        };
+        
+        this.setDescriptionText = function(/* String */ text)
+        {
+           diagDescription.html(text); 
+        };
+        
+        this.setOKCallBack = function(callback)
+        {
+            okCallBack = callback;
+        };
+        
+        this.setOKText = function(/* String */ text)
+        {
+            okButton.html(text);
+        };
+        
+        this.setCloseCallBack = function(callback)
+        {
+            closeCallBack = callback;            
+        };
+        
+        this.setCloseText = function (/* String */ text)
+        {
+           closeButton.html(text); 
+        };
+    }
+};
 

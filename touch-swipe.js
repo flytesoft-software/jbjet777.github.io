@@ -8,6 +8,11 @@
 
 jQuery.fn.extend(
 {
+    mdlUpgraded: function(callback)
+    {
+        return $(this).on("mdl-componentupgraded", callback);
+    },
+    
     animationEndOne: function(callback)
     {
         return $(this).one("animationend", callback);
@@ -18,17 +23,34 @@ jQuery.fn.extend(
         return $(this).on("animationend", callback);
     },
     
+    animationStart: function(callback)
+    {
+        return $(this).on("animationstart", callback);
+    },
+    
     clickOff: function(callback)
     {
         return $(this).off("click", callback);
+    },
+    
+    clickOne: function(callback)
+    {
+        return $(this).one("click", callback);
     },
     
     longPress: function(callback)
     {
         var pressTimer = null;
         var fn = callback;
+         var startX = 0,
+            startY = 0,
+            distX = 0,
+            distY = 0,
+            currentX = 0,
+            currentY = 0;
+        var MOVE_THRESHOLD = 20;
         
-        $(this).on("touchend mouseup", function(callback)
+        $(this).on("touchend mouseup", function(event)
         {
             if(pressTimer)
             {
@@ -37,8 +59,60 @@ jQuery.fn.extend(
             }
         });
         
-        $(this).on("touchstart mousedown", function(callback)
+        $(this).on("touchstart mousedown", function(event)
         {
+            if(event.type === "mousedown")
+            {
+                startX = event.pageX;
+                startY = event.pageY;
+            }
+            else
+            {
+                startX = event.changedTouches[0].pageX;
+                startY = event.changedTouches[0].pageY;
+            }
+            
+            // Cancel the longpress if there is movement.
+            $(this).on("touchmove mousemove", function(event)
+            {
+                if(event.type === "mousemove")
+                {
+                    currentX = event.pageX;
+                    currentY = event.pageY;
+                }
+                else
+                {
+                    currentX = event.changedTouches[0].pageX;
+                    currentY = event.changedTouches[0].pageY;
+                }
+            
+                distX = currentX - startX;
+                distY = currentY - startY;
+                
+                if(Math.abs(distX) > MOVE_THRESHOLD || Math.abs(distY) > MOVE_THRESHOLD)
+                {
+                    console.log("Trying to canceling longpress event.");
+                    $(this).off("touchmove mousemove");
+                    
+                    if(pressTimer)
+                    {   
+                        window.clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                }
+            });
+            
+            $(this).one("touchend mouseup", function(event)
+            {
+                $(this).off("touchmove mousemove");
+                console.log("Long press test ending.");
+                if(pressTimer)
+                {   
+                    window.clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+            });
+            
             if(pressTimer)
             {
                 window.clearTimeout(pressTimer);
@@ -46,6 +120,8 @@ jQuery.fn.extend(
             }
             pressTimer = window.setTimeout(function()
             {
+                $(this).off("touchmove mousemove");
+                console.log("Long press fired.");
                 fn(event);
             }, 1000);
         });
@@ -53,6 +129,7 @@ jQuery.fn.extend(
     
     longPressOff: function(callback)
     {
+        $(this).off("touchmove mousemove");
         $(this).off("touchend mouseup", callback);
         return $(this).off("touchstart mousedown", callback);
     },
@@ -117,7 +194,7 @@ jQuery.fn.extend(
             currentX = 0,
             currentY = 0;
         var swipeType = "none";
-        var SWIPE_THRESHOLD = 25;
+        var SWIPE_THRESHOLD = 50;
     
         $(this).touchStart(function(event)
         {

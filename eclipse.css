@@ -156,7 +156,7 @@ and open the template in the editor.
 
 .eclipse-header
 {
-    top: -120px;
+    top: -160px;
     position: relative;
     
     transition-property: all;
@@ -175,7 +175,7 @@ and open the template in the editor.
     padding-top: 12px; 
     padding-bottom: 12px;
     position: absolute !important;
-    bottom: -72px;
+    bottom: -96px;
     left: 0 !important;
     right: 0 !important;
     z-index: 1 !important;
@@ -193,7 +193,7 @@ and open the template in the editor.
 
 @keyframes footer-animation 
 {
-    0%   {bottom: -72px;}
+    0%   {bottom: -96px;}
     100% {bottom: 0px;}
 }
 
@@ -235,6 +235,16 @@ and open the template in the editor.
     flex-grow: 3;
 }
 
+.eclipse-stats-icon
+{
+    position: absolute;
+    vertical-align: middle;
+    font-size: 2.2em;
+    top: 45%;
+    left: -0.1em;
+    display: none;
+}
+
 .eclipse-selected
 {
     background-color: threedlightshadow;
@@ -256,6 +266,8 @@ and open the template in the editor.
 .eclipse-drawer
 {
     overflow: hidden;
+    width: 280px;
+    transform: translateX(-290px);
 }
 
 .eclipse-map
@@ -264,8 +276,80 @@ and open the template in the editor.
     width: 100vw;
 }
 
+.eclipse-header-row
+{
+    display: block;
+    padding-top: 12px;
+}
+
+.eclipse-map-button-placement
+{
+    z-index: 9999;
+    position: fixed;
+    bottom: 8em;
+    right: -15vw;
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-map-button-placement-transition
+{
+    right: 2vw;
+}
+
 .header-shrink
 {
     min-height: 0px !important;
     height: 0px !important;
+    padding: 0px !important;
+}
+
+
+.simulation-content
+{
+    background: blue;
+    height: 100%;
+    overflow: hidden;
+}
+
+.loading-spinner
+{
+    top: 40vh;
+    left: 50vw;
+    z-index: 99;
+    position: absolute;
+}
+
+.zero-height
+{
+    height: 0px;
+}
+
+#sun
+{
+    height:200px;
+    width:200px;
+    background-color: yellow;
+    left:200px;
+    top:200px;
+    color: #fff;
+    border-radius:50%;
+    position: absolute;
+    display: none;
+}
+
+#moon
+{
+    height:200px;
+    width:200px;
+    background-color: black;
+    border-radius:50%;
+    top:-100px;
+    left:0px;
+    color: #fff;
+    position: relative;
+    display: none;
 }

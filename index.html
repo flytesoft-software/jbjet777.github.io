@@ -15,11 +15,8 @@ and open the template in the editor.
         <meta name="theme-color" content="indigo">
 
         <link rel="apple-touch-icon" href="images/favicon.png" >
-        <link rel="icon" sizes="192x192" href="icon.png">
+        <link rel="icon" sizes="192x192" href="images/icon.png">
         <link rel="icon" type="image/png" href="images/favicon.png">
-        
-        <!-- JSCONSOLE -->
-        <!-- <script src="https://jsconsole.com/js/remote.js?4f418caa-6ea0-4ff5-8694-9ca894ce7349"></script> -->
         
         <!-- jQuery API -->
         <script src="jquery/jquery-3.1.1.min.js"></script>
@@ -27,8 +24,11 @@ and open the template in the editor.
 
         <!-- Material Light API -->
         <link rel="stylesheet" href="material/material.min.css">
-        <script src="material/material.min.js"></script>
         <link rel="stylesheet" href="material/fonts.css">
+        <link rel="stylesheet" href="dialog-polyfill/dialog-polyfill.css">
+        <script src="material/material.min.js"></script>
+        <script src="dialog-polyfill/dialog-polyfill.js"></script>
+        <script src="material_addons.js"></script>
         
         <!-- LeafletJS API -->
         <link rel="stylesheet" href="leaflet/leaflet.css" />
@@ -36,18 +36,49 @@ and open the template in the editor.
         
         <!-- Eclipse Chaser Stylesheets -->
         <link rel="stylesheet" href="eclipse.css">
+        <link rel="stylesheet" href="extra-icons.css">
         
-        <script src="map_temp_code.js"></script>
+        <script src="EclipseCalc.js"></script>
+        <script src="eclipse_ui_material.js"></script>
     </head>
 
     <body>
+        <!-- MDL DIALOG -->
+        <dialog id="diag" class="mdl-dialog">
+            <h4 id="diag_title" class="mdl-dialog__title">General Error!</h4>
+            <div class="mdl-dialog__content">
+                <p id="diag_description">
+                    There was an error.
+                </p>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button id="ok_button" type="button" class="mdl-button">OK</button>
+                <button id="close_button" type="button" class="mdl-button close">Close</button>
+            </div>
+        </dialog>
+        <!-- MDL DIALOG END -->
+        
+        <!-- MDL SNACKBAR -->
+        <div id="snackbar" aria-live="assertive" aria-atomic="true" aria-relevant="text" class="mdl-snackbar mdl-js-snackbar">
+            <div class="mdl-snackbar__text"></div>
+            <button type="button" class="mdl-snackbar__action"></button>
+        </div>
+        <!-- MDL SNACKBAR -->
+        
         <!-- Simple header with fixed tabs. -->
         <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
+            
+            <!-- LOADING SPINNER -->
+            <div class="mdl-spinner mdl-js-spinner loading-spinner"></div>
+            <!-- LOADING SPINNER END -->
+                
             <header class="mdl-layout__header eclipse-header">
-                <div class="mdl-layout__header-row">
+                <div class="mdl-layout__header-row eclipse-header-row">
                     <!-- Title -->
-                    <span class="mdl-layout-title">Eclipse Chaser Mobile!</span>
+                    <span id="eclipse-title" class="mdl-layout-title">Eclipse Chaser Mobile!</span>
+                    <span id="eclipse-title-date" class="mdl-list__item-sub-title">January 01, 1900</span>
                 </div>
+                
                 <!-- Tabs -->
                 <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
                     <a id="circumstance-select" href="#circumstances-tab" class="mdl-layout__tab is-active">Circumstances</a>
@@ -58,47 +89,19 @@ and open the template in the editor.
             <!-- Simple header with fixed tabs. END -->
 
             <!-- APP DRAWER -->
-            <div class="mdl-layout__drawer eclipse-drawer">
+            <div id="app_drawer" class="mdl-layout__drawer eclipse-drawer">
                 <span class="mdl-layout-title">Choose Eclipse</span>
 
                 <div class="drawer-cointainer">
                     <!-- ECLIPSE CHOICE LIST -->
-                    <ul class="mdl-list eclipse-choice-list">
-                        <li class="mdl-list__item mdl-list__item--two-line eclipse-selected">
-                            <span class="mdl-list__item-primary-content">
-                                <i class="total-eclipse-icon mdl-list__item-avatar">Total Eclipse</i>
-                                <span>Total Eclipse</span>
-                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
-                            </span>
-                        </li>
-                        <li class="mdl-list__item mdl-list__item--two-line">
-                            <span class="mdl-list__item-primary-content">
-                                <i class="partial-eclipse-icon mdl-list__item-avatar">Partial Eclipse</i>
-                                <span>Partial Eclipse</span>
-                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
-                            </span>
-                        </li>
-                        <li class="mdl-list__item mdl-list__item--two-line">
-                            <span class="mdl-list__item-primary-content">
-                                <i class="annular-eclipse-icon mdl-list__item-avatar">Annular Eclipse</i>
-                                <span>Annular Eclipse</span>
-                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
-                            </span>
-                        </li>
-                        <li class="mdl-list__item mdl-list__item--two-line">
-                            <span class="mdl-list__item-primary-content">
-                                <i class="hybrid-eclipse-icon mdl-list__item-avatar">Hybrid Eclipse</i>
-                                <span>Hybrid Eclipse</span>
-                                <span class="mdl-list__item-sub-title">August 21, 2017</span>
-                            </span>
-                        </li>
+                    <ul id="eclipse_list" class="mdl-list eclipse-choice-list">                       
                     </ul>
                     <!-- ECLIPSE CHOICE LIST END -->
 
                     <!-- NEXT ECLIPSE BUTTONS -->
                     <div class="bottom-drawer-items">
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">&nbsp;&nbsp;Next&nbsp;</button>
-                        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">Visible</button>
+                        <button id="next-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">&nbsp;&nbsp;Next&nbsp;</button>
+                        <button id="visible-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">Visible</button>
 
                         <!-- NEXT ECLIPSE BUTTONS END -->
 
@@ -116,38 +119,39 @@ and open the template in the editor.
                 </div>
             </div>
             <!-- APP DRAWER END -->
-
+           
             <!-- APP CONTENT -->
             <main class="mdl-layout__content">
-
+                
                 <!-- CIRCUMSTANCES CONTENT -->
                 <section class="mdl-layout__tab-panel is-active eclipse-content-fade-in" id="circumstances-tab">
                     <div id="circumstances" class="page-content">
-
+                        
                         <!-- ECLIPSE TYPE LIST -->
                         <ul class='mdl-list__item mdl-list__item--two-line'>
                             <li class="mdl-list__item">
                                 <span class="mdl-list__item-primary-content">
-                                    <i class="material-icons mdl-list__item-avatar no-eclipse-icon">No Eclipse</i>
-                                    <span>No Eclipse Occurs</span>
-                                    <span class="mdl-list__item-sub-title">August 21, 2017</span>
+                                    <i id="eclipse_pic" class="material-icons mdl-list__item-avatar no-eclipse-icon">No Eclipse</i>
+                                    <span id="eclipse_type">No Eclipse Occurs</span>
+                                    <span id="eclipse_date" class="mdl-list__item-sub-title"></span>
+                                    <span  id="not_visible" class="mdl-list__item-sub-title">This eclipse is not visible from this location.</span>
                                 </span>
                             </li>
                         </ul>
                         <!-- ECLIPSE TYPE LIST END -->
 
                         <!-- ECLIPSE CIRCUMSTANCES TABLE-->
-                        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table">
+                        <table id="stats_block" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
                             <thead>
                                 <tr>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Coverage</span><br><span class="eclipse-font-default">100.0%</span></th>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Magnitude</span><br><span class="eclipse-font-default">101.0%</span></th>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Depth</span><br><span class="eclipse-font-default">76.8% S</span></th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Coverage</span><br><span id="coverage" class="eclipse-font-default">100.0%</span></th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Magnitude</span><br><span id="magnitude" class="eclipse-font-default">101.0%</span></th>
+                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span id="depth_title">Depth</span><br><span id="depth" class="eclipse-font-default">76.8% S</span></th>
                                 </tr>
                             </thead>
                         </table>
-
-                        <table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table">
+                         
+                        <table id="time_block" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
                             <thead>
                                <tr>
                                     <th class="mdl-data-table__cell--non-numeric eclipse-td">Start Time</th>
@@ -155,47 +159,82 @@ and open the template in the editor.
                                     <th class="mdl-data-table__cell--non-numeric eclipse-td">Duration</th>
                                 </tr>
                             </thead>
+                       
 
                             <tbody>
                                 <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunrise</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunrise</span><br><span id="sunrise_time">12:00:00 PM</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="sunrise_count">-364:23:59:59</span></td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
                                 <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Partial Phase Begins</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>3:00:00</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <span>Partial Phase Begins</span>                                        
+                                        <br><i id="c1_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                        <span id="c1_time">12:00:00 PM</span>
+                                    </td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="c1_count">-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <br>
+                                        <span id="entire_duration">3:00:00</span>
+                                    </td>
+                                </tr>
+
+                                <tr id="total_begins">
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <span id="type_div_start">Total Phase Begins</span>
+                                        <br><i id="c2_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                        <span id="c2_time">12:00:00 PM</span>
+                                    </td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <br>
+                                        <span id="c2_count">-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="total_duration">7:31</span></td>
                                 </tr>
 
                                 <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Total Phase Begins</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>7:31</span></td>
-                                </tr>
-
-                                <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Mid Eclipse At</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <span>Mid Eclipse At</span>
+                                        <br><i id="mid_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                        <span id="mid_time">12:00:00 PM</span>
+                                    </td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <br><span id="mid_count">-364:23:59:59</span></td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
-                                <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Total Phase Ends</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                <tr id="total_ends">
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <span id="type_div_ends">Total Phase Ends</span>
+                                        <br><i id="c3_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                        <span id="c3_time">12:00:00 PM</span>
+                                    </td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"
+                                        ><br><span id="c3_count">-364:23:59:59</span>
+                                    </td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
                                <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Partial Phase Ends</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <span>Partial Phase Ends</span>
+                                        <br><i id="c4_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                        <span id="c4_time">12:00:00 PM</span>
+                                    </td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <br><span id="c4_count">-364:23:59:59</span></td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
                                 <tr>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunset</span><br><span>12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span>-364:23:59:59</span></td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                        <span>Local Sunset</span>
+                                        <br><span  id="sunset_time">12:00:00 PM</span>
+                                    </td>
+                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"
+                                        ><br><span id="sunset_count">-364:23:59:59</span>
+                                    </td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
                             </tbody>
@@ -207,17 +246,23 @@ and open the template in the editor.
 
                 <!-- MAP CONTENT -->
                 <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="map-tab">
-                    <div id="map" class="page-content eclipse-map">
-                       
+                    <div id="map" class="page-content eclipse-map"  style="display: none;">
+                        <div id="map-buttons" class="eclipse-map-button-placement eclipse-map-button-placement-transition">
+                            <button id="map-location-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+                                <i class="material-icons">my_location</i>
+                            </button>
+                        </div>
                     </div>              
                 </section>
                 <!-- MAP CONTENT END -->
 
                 <!-- SIMULATION CONTENT -->
                 <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="simulation-tab">
-                    <div class="page-content">
-                        <h2>Simulation here.</h2>
-                        
+                    <div class="page-content simulation-content"  style="display: none;">
+                        <div id="sun">
+                            <div id="moon">
+                            </div>
+                        </div>                        
                     </div>
                 </section>
                 <!-- SIMULATION CONTENT END -->
@@ -235,24 +280,24 @@ and open the template in the editor.
                     </ul>
                 </div>
                 <!-- HACK TO MAKE CONTENT VISIBLE WITH FOOTER  END-->
-                
+                                                
             </main>
             <!-- APP CONTENT END -->
-
+            
             <!-- FIXED FOOTER -->
             <footer class="mdl-mini-footer eclipse-footer">
                 <ul class="mdl-mini-footer__link-list eclipse-footer-list">
-                    <li><a href="#">Lat<br>00.00</a></li>
+                    <li><a href="#">Lat<br><span id='lat'>00.00</span></a></li>
                     <li><a href="#"></a></li>
-                    <li><a href="#">Long<br>000.00</a></li>
+                    <li><a href="#">Long<br><span id='long'>000.00</span></a></li>
                     <li><a href="#"></a></li>
-                    <li><a href="#">Alt<br>-0000 ft</a></li>
+                    <li><a href="#">Alt<br><span id='alt'>-0000</span> ft</a></li>
                     <li><a href="#"></a></li>
-                    <li><a href="#">Time<br>12:00:00PM</a></li>
+                    <li><a href="#">Time<br><span id='time'>12:00:00PM</span></a></li>
                 </ul>
             </footer>
             <!-- FIXED FOOTER END -->
-
+            
         </div>
     </body>
 </html>
