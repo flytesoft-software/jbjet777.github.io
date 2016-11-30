@@ -147,6 +147,7 @@ class EclipseUI
                     positionWatch.startWatch();
                 });
                 
+                material.hideSpinner();
                 dialogBox.showModal();
             }
             else
@@ -872,6 +873,8 @@ class EclipseUI
                     showToast("Position in manual mode.");
                 });
             }
+            
+            material.hideSpinner();
             
             dialogBox.showModal();            
         }
