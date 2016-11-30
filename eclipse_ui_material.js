@@ -20,6 +20,7 @@ class EclipseUI
         var MASTER_TIMER_INTERVAL = 1000;
         var START_COORDS = [34, -118];
         var START_ZOOM = 10;
+        var IGNORE_DRAG = 15;   // If drag movement is small, keep location centered.
         
         var material = new MaterialAddons;
         var eclipseCatalog = new Eclipses();
@@ -248,12 +249,16 @@ class EclipseUI
             map.on("dragstart", function(ev)
             {
                 console.log("Drag started.");
-                mapPositionLock = false;
-                mapLocationButton.children("i").html("location_searching");
+                
             });
             
             map.on("dragend", function(ev)
             {
+                if(ev.distance > IGNORE_DRAG)
+                {
+                    mapPositionLock = false;
+                    mapLocationButton.children("i").html("location_searching");
+                }
                 console.log("Drag ended.");
             });
             
