@@ -256,12 +256,12 @@ class EclipseUI
             
             map.on("dragend", function(ev)
             {
-                tempIgnoreLock = false;
                 if(ev.distance > IGNORE_DRAG)
                 {
                     mapPositionLock = false;
                     mapLocationButton.children("i").html("location_searching");
                 }
+                tempIgnoreLock = false;
                 console.log("Drag ended.");
             });
             
