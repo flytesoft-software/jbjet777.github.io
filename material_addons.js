@@ -18,7 +18,7 @@ class MaterialAddons
         var mainPage = $("main");
         var header = $("header");
         var footer = $("footer");
-        var mapButtons = $("#map-buttons");
+        
         var privPages = $("section");    
         var privTabs = $("header a");
         var appDrawer = $(".mdl-layout__drawer");
@@ -32,13 +32,16 @@ class MaterialAddons
         var swipeOccurring = false;
         var swipeOff = false;
         
+        var headerChangeCallBack = null;
+        var zeroHeaderFooter = false;        
+        
         var disabledPages = [];
         
-        var nav = navigator;
+        var windowResizeFunc = null;
         
+        watchHeaderChanges();
         addCustomScroller();
         bindEvents();
-        delayedStart();
         
         function addCustomScroller()
         {
@@ -53,15 +56,6 @@ class MaterialAddons
             {
                 console.log("Running on mobile browser.");
             }
-        }
-        
-        function delayedStart()
-        {
-            // TODO: FIXME: This is a hacky fix, want to know when entire DOM has been MDL upgraded.
-            window.setTimeout(function()
-            {
-                showHeaderFooter();
-            }, START_DELAY);
         }
         
         function getPages()
@@ -136,14 +130,22 @@ class MaterialAddons
             $( window ).resize(onResize);
             swipeOn();
             privTabs.click(onTabClick);
-            appDrawer.swipe(onDrawerSipe);
+            appDrawer.swipe(onDrawerSwipe);
         }
         
-        function onDrawerSipe(event)
+        function onDrawerSwipe(event)
         {
             if(event.swipeType === "left")
             {
+                appDrawer.swipeOff();
                 layOut.MaterialLayout.toggleDrawer();
+                console.log("Drawer swipe left.");
+                appDrawer.transitionEndOne(function(ev)
+                {
+                    // mainPage.click();
+                    appDrawer.swipe(onDrawerSwipe);
+                    console.log("Drawer swipe listener back on.");
+                });
             }
         }
     
@@ -236,19 +238,6 @@ class MaterialAddons
             }
         }
         
-        function onToggleClick(event)
-        {
-            console.log("Toggle click fired.");
-            if(header.hasClass("eclipse-header-transition"))
-            {
-                removeHeaderFooter();
-            }
-            else
-            {
-                showHeaderFooter();
-            }            
-        }
-        
         function onTouchEnd()
         {
             console.log("Touch ended.");
@@ -257,10 +246,15 @@ class MaterialAddons
             swipeOccurring = false;
         }
         
-        function onResize()
+        function onResize(event)
         {
-            console.log("Resize called");
+            console.log("Material window resize called.");
             screenWidth = geContentWidth();
+            
+            if(windowResizeFunc)
+            {
+                windowResizeFunc(event);
+            }               
         }
     
         function geContentWidth()
@@ -271,45 +265,91 @@ class MaterialAddons
         function showHeaderFooter()
         {
             header.addClass("eclipse-header-transition");  
-            header.removeClass("header-shrink");
-            
             footer.addClass("eclipse-footer-transition");
-            footer.removeClass("header-shrink");
-            
-            mapButtons.addClass("eclipse-map-button-placement-transition");
+                        
+            zeroHeaderFooter = false;
+            if(headerChangeCallBack)
+            {
+                // headerChangeCallBack();
+                footer.transitionEndOne(headerChangeCallBack);
+            }            
         }
         
         function removeHeaderFooter()
         {
+            zeroHeaderFooter = true;
+            if(headerChangeCallBack)
+            {
+                headerChangeCallBack();
+                //footer.transitionEndOne(headerChangeCallBack);
+            }
             header.removeClass("eclipse-header-transition");
-            header.addClass("header-shrink");
-            
             footer.removeClass("eclipse-footer-transition");
-            footer.addClass("header-shrink");
-            
-            mapButtons.removeClass("eclipse-map-button-placement-transition");
         }
+        
+        /*
+         * We use this function to add a class to the dynamically created app drawer button.
+         * This keeps the app drawer button from creating a border when focused by the browser.
+         * @returns {undefined}
+         */
+        function watchHeaderChanges()
+        {
+            // select the target node
+            var markUpsComplete = false;
+            var target = header[0];
+
+            // create an observer instance
+            var initObserver = new MutationObserver(function(mutations) 
+            {
+                if(mutations.length >= 3)
+                {
+                    if(!markUpsComplete)
+                    {
+                        markUpsComplete = true; // To ensure we only do this once.
+                        $("div.mdl-layout__drawer-button").addClass("eclipse-drawer-button");
+                        header.addClass("eclipse-header-transition");  
+                        footer.addClass("eclipse-footer-transition");
+                    }
+                }
+                
+                initObserver.disconnect();
+            });
+            
+            // configuration of the observer:
+            var initConfig = {childList: true};
+            
+            // pass in the target node, as well as the observer options
+            initObserver.observe(target, initConfig);
+            
+        }
+        
+        this.disableYScroll = function()
+        {
+            mainPage.css('overflow-y', 'hidden');
+        };
+        
+        this.enableYScroll = function()
+        {
+            mainPage.css('overflow-y', "");
+        };
         
         this.onHeaderChange = function(func)
         {
-            header.transitionEnd(function(event)
-            {
-                func(event);
-            });
-            
-            footer.transitionEnd(function(event)
-            {
-                func(event);
-            });
+            headerChangeCallBack = func;
         };
         
         this.getHeaderHeight = function()
         {
-            return header.height();
+            if(zeroHeaderFooter)
+                return 0;
+            
+            return header.outerHeight(true);
         };
         
         this.getFooterHeight = function()
         {
+            if (zeroHeaderFooter) 
+                return 0;
             return footer.outerHeight(true);
         };
         
@@ -351,46 +391,6 @@ class MaterialAddons
             setSwipeOn();
         };
         
-        this.enableHideHeader = function(pages)
-        {
-            this.disableHideHeader();
-            
-            if(typeof(pages) === "undefined")
-            {
-                privPages.longPress(onToggleClick);
-            }
-            else if(typeof(pages) === "number")
-            {
-                $(privPages[pages]).longPress(onToggleClick);
-            }
-            else if(typeof(pages) === "object")
-            {
-                if(Array.isArray(pages))
-                {
-                    pages.forEach(function(item)
-                    {
-                        if(typeof(item) === "number")
-                        {
-                            $(privPages[item]).longPress(onToggleClick);
-                        }
-                    });
-                }
-                else
-                {
-                    privPages.longPress(onToggleClick);
-                }
-            }
-            else
-            {
-                privPages.longPress(onToggleClick);
-            }
-        };
-        
-        this.disableHideHeader = function()
-        {
-            privPages.longPressOff();
-        };
-        
         this.getPageIndex = function()
         {
             return getCurrentPageIndex();
@@ -403,6 +403,25 @@ class MaterialAddons
                 event.currentPageIdx = getCurrentPageIndex();
                 func(event);
             });
+        };
+        
+        /* Show or hides the header and footer, returns false if removed, else true.
+         * @returns {Boolean}
+         */
+        this.toggleHeaderFooter = function()
+        {
+            if(header.hasClass("eclipse-header-transition"))
+            {
+                removeHeaderFooter();
+                return false;
+            }
+            else
+            {
+                showHeaderFooter();
+                return true;
+            }
+            
+           return false; 
         };
         
         this.showSpinner = function()
@@ -453,6 +472,17 @@ class MaterialAddons
                     callback(event);
                 }
             }).bind(this));
+        };
+        
+        /*
+         * Input event callback function to be called upon window resize.
+         * Called only after all material markups have been completed.
+         * @param {Function(event)} callback
+         * @returns {undefined}
+         */
+        this.onWindowResize = function(callback)
+        {
+            windowResizeFunc = callback;
         };
         
         /* Toggle app nav drawer open or close.

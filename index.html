@@ -247,8 +247,18 @@ and open the template in the editor.
                 <!-- MAP CONTENT -->
                 <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="map-tab">
                     <div id="map" class="page-content eclipse-map"  style="display: none;">
+                        <div id="zoom-buttons" class="eclipse-zoom-button-placement eclipse-zoom-button-placement-transition">
+                            <button id="map-zoom-in-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored">
+                                <i class="material-icons">add</i>
+                            </button>
+                            <div class="eclipse-map-button-pad"></div>
+                            <button id="map-zoom-out-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored">
+                                <i class="material-icons eclipse-minus-button-font">-</i>
+                            </button>
+                        </div>
+                            
                         <div id="map-buttons" class="eclipse-map-button-placement eclipse-map-button-placement-transition">
-                            <button id="map-location-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+                            <button id="map-location-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--primary">
                                 <i class="material-icons">my_location</i>
                             </button>
                         </div>

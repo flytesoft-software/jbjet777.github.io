@@ -91,7 +91,6 @@ jQuery.fn.extend(
                 
                 if(Math.abs(distX) > MOVE_THRESHOLD || Math.abs(distY) > MOVE_THRESHOLD)
                 {
-                    console.log("Trying to canceling longpress event.");
                     $(this).off("touchmove mousemove");
                     
                     if(pressTimer)
@@ -105,7 +104,6 @@ jQuery.fn.extend(
             $(this).one("touchend mouseup", function(event)
             {
                 $(this).off("touchmove mousemove");
-                console.log("Long press test ending.");
                 if(pressTimer)
                 {   
                     window.clearTimeout(pressTimer);

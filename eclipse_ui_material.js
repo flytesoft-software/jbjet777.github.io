@@ -15,12 +15,14 @@ class EclipseUI
         var TOAST_TIMEOUT = 2000;
         var TIME_LOCALE = "en-US";
         var DATE_OPTIONS = {timeZone: "UTC", year: "numeric", month: "long", day: "numeric"};
+        var MAP_OPTIONS = {zoomControl: false};
         var RUN_BEFORE = "run_before";
         var IMGS_FOLDER = 'images/';
         var MASTER_TIMER_INTERVAL = 1000;
         var START_COORDS = [34, -118];
         var START_ZOOM = 10;
         var IGNORE_DRAG = 15;   // If drag movement is small, keep location centered.
+        var METERS_TO_FEET = 3.28084;
         
         var material = new MaterialAddons;
         var eclipseCatalog = new Eclipses();
@@ -49,7 +51,7 @@ class EclipseUI
         var tempIgnoreLock = false;
 
         var jMap = $("#map");
-        var map = L.map('map');
+        var map = L.map('map', MAP_OPTIONS);
         var locationIcon = L.icon({
                 iconUrl: 'images/loc24.png',
                 iconSize: [20, 20],
@@ -66,6 +68,11 @@ class EclipseUI
         var visibleButton = $("#visible-button"); // TODO: Visible button functionality.
         var snackBar = document.querySelector("#snackbar");
         var mapLocationButton = $("#map-location-button");
+        var mapZoomInButton = $("#map-zoom-in-button");
+        var mapZoomOutButton = $("#map-zoom-out-button");
+        var mapSection = $("#map-tab");
+        var mapButtons = $("#map-buttons");
+        var zoomButtons = $("#zoom-buttons");
         var visibilityIcons = null;
         
         /* Eclipse STATS IDs START */
@@ -157,6 +164,27 @@ class EclipseUI
                 positionWatch.startWatch();
             }
         }
+        
+        function checkZooms()
+        {
+            if(map.getZoom() >= map.getMaxZoom())
+            {
+                mapZoomInButton.prop("disabled", true);
+            }
+            else
+            {
+                mapZoomInButton.prop("disabled", false);
+            }
+            
+            if(map.getZoom() <= map.getMinZoom())
+            {
+                mapZoomOutButton.prop("disabled", true);
+            }
+            else
+            {
+                mapZoomOutButton.prop("disabled", false);
+            }
+        }
                         
         function bindEvents()
         {
@@ -165,10 +193,14 @@ class EclipseUI
             positionWatch.setPositionCall(onPosition);
             positionWatch.setErrorCall(onPositionError);
             
+            jMap.longPress(onToggleClick);
+            
             material.onPageChange(function (event)
             {
                 sun.hide();
                 moon.hide();
+                
+                material.enableYScroll();
                 
                 if (MAP_PAGE_IDX === event.currentPageIdx)
                 {
@@ -177,6 +209,7 @@ class EclipseUI
                     footerHeight = material.getFooterHeight();
                     mapHeight = screenHeight - headerHeight - footerHeight;
                     jMap.height(mapHeight);
+                    material.disableYScroll();
                     map.invalidateSize();
                     console.log("Map size change on page: " + event.currentPageIdx);
                 }
@@ -187,12 +220,13 @@ class EclipseUI
                     footerHeight = material.getFooterHeight();
                     mapHeight = screenHeight - headerHeight - footerHeight;
                     simulationTab.height(mapHeight);
+                    material.disableYScroll();
                     sun.show();
                     moon.show();
                 }
             });
 
-            material.onHeaderChange(function (even)
+            material.onHeaderChange(function (event)
             {
                 console.log("Header change.");
                 headerHeight = material.getHeaderHeight();
@@ -202,12 +236,16 @@ class EclipseUI
                 map.invalidateSize();
             });
 
-            $(window).resize(function (event)
+            material.onWindowResize(function (event)
             {
-                console.log("Window height change.");
+                console.log("UI: Window height change.");
+                
+                headerHeight = material.getHeaderHeight();
+                footerHeight = material.getFooterHeight();
                 screenHeight = $(window).height();
                 mapHeight = screenHeight - headerHeight - footerHeight;
                 jMap.height(mapHeight);
+                map.invalidateSize();
                 simulationTab.height(mapHeight);
             });
             
@@ -247,6 +285,16 @@ class EclipseUI
                 }
             });
             
+            mapZoomInButton.click(function(ev)
+            {
+                map.zoomIn();
+            });
+            
+            mapZoomOutButton.click(function(ev)
+            {
+                map.zoomOut();
+            });
+            
             map.on("dragstart", function(ev)
             {
                 tempIgnoreLock = true;
@@ -265,8 +313,19 @@ class EclipseUI
                 console.log("Drag ended.");
             });
             
+            jMap.keydown(function(ev)
+            {
+                if(ev.keyCode <= 40 && ev.keyCode >= 37)
+                {
+                    mapPositionLock = false;
+                    mapLocationButton.children("i").html("location_searching");
+                    console.log("Map arrow key event.");  
+                }
+            });
+            
             map.on("zoomend", function(ev)
             {
+                checkZooms();
                 if(mapPositionLock)
                 {
                     map.panTo(L.latLng(currentCoords.latitude, currentCoords.longitude));
@@ -384,6 +443,23 @@ class EclipseUI
                 default:
                     break;
             } 
+        }
+        
+        function onToggleClick(event)
+        {
+            console.log("Toggle click fired.");
+            if(material.toggleHeaderFooter())
+            {
+                mapSection.removeClass("eclipse-section-expand");
+                mapButtons.addClass("eclipse-map-button-placement-transition");
+                zoomButtons.addClass("eclipse-zoom-button-placement-transition");
+            }
+            else
+            {
+                mapButtons.removeClass("eclipse-map-button-placement-transition");
+                zoomButtons.removeClass("eclipse-zoom-button-placement-transition");
+                mapSection.addClass("eclipse-section-expand");
+            }
         }
         
         function onVisibleIndexUpdate(data)
@@ -818,7 +894,7 @@ class EclipseUI
             
             latID.html(currentCoords.latitude.toFixed(2));
             longID.html(currentCoords.longitude.toFixed(2));
-            altID.html(currentAltitude.toFixed(2));
+            altID.html((currentAltitude * METERS_TO_FEET).toFixed(2));
             
             calculateWorker.postMessage({'cmd': 'coords', 'coords': JSON.stringify(localCoords)});
                         
@@ -875,7 +951,7 @@ class EclipseUI
                 {
                     positionWatch.startWatch();
                 });
-                dialogBox.setCancelCallBack(function()
+                dialogBox.setCloseCallBack(function()
                 {
                     manualMode = true;
                     showToast("Position in manual mode.");
@@ -959,7 +1035,6 @@ class EclipseUI
         {
             jMap.height(mapHeight);
             material.disableSwipe(1);
-            material.enableHideHeader(1);
                         
             map.setView(START_COORDS, START_ZOOM);
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
@@ -968,6 +1043,7 @@ class EclipseUI
             
             bindEvents();
             firstRun();
+            checkZooms();
             
             loadEclipseData();            
         };
