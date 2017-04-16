@@ -2350,19 +2350,22 @@ class EclipseUI
                 
                 updateCountDowns();
                 
-                switch(simulationSelection)
+                if(!shadowAnimator.isAnimating())
                 {
-                    case MID_SELECTION:
-                        goMidContactPoint();
-                        break;
-                    case C1_SELECTION:
-                        goC1ContactPoint();
-                        break;
-                    case C4_SELECTION:
-                        goC1ContactPoint();
-                    default:
-                        goMidContactPoint();
-                        break;
+                    switch(simulationSelection)
+                    {
+                        case MID_SELECTION:
+                            goMidContactPoint();
+                            break;
+                        case C1_SELECTION:
+                            goC1ContactPoint();
+                            break;
+                        case C4_SELECTION:
+                            goC1ContactPoint();
+                        default:
+                            goMidContactPoint();
+                            break;
+                    }
                 }
             } 
             else
