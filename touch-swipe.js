@@ -121,7 +121,7 @@ jQuery.fn.extend(
                 $(this).off("touchmove mousemove");
                 console.log("Long press fired.");
                 fn(event);
-            }, 1000);
+            }, 750);
         });
     },
     

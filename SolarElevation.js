@@ -242,6 +242,16 @@ class SolarCalc
 
             return solarElev;
         };
+        
+        /*
+         * Returns Julianday from javaScript Date object.
+         * @param {Date} time - Javascript Date object
+         * @returns {Number}
+         */
+        this.getJulianDay = function(time)
+        {
+            return getJD(time);
+        };
 
         /*
          * Calculates sunrise and sunset time for a given location

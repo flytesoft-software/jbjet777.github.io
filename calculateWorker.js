@@ -4,18 +4,20 @@
  * and open the template in the editor.
  */
 
+"use strict";
 
 class CalculateWorker
 {
     constructor()
     {
-        var MIN_UPDATE_RATE = 250;  // Minimum number of milliseconds allowed between coordinate updates.
-        var DAY_BUFFER = 2;         // Number of days after current eclipse app starts to focus of next eclipse.
+        var MIN_UPDATE_RATE = 0;  // Minimum number of milliseconds allowed between coordinate updates.
+        var DAY_BUFFER = 2;         // Number of days after current eclipse app starts to focus on next eclipse.
                 
         var m_coords = null;
         var m_eclipse = null;
         var m_lastUpdateTime = null;
         var m_DateOffset = 0;
+        var pointCount = 0;        
                         
         importScripts("EclipseCalc.js");
         importScripts("SolarElevation.js");
@@ -23,6 +25,7 @@ class CalculateWorker
         var m_eclipseCatalog = new Eclipses();
         var solarCalc = new SolarCalc;
         
+                
         self.addEventListener('message', function(e) 
         {
             var data = e.data;
@@ -43,8 +46,41 @@ class CalculateWorker
                 case 'date_offset':
                     updateDateOffset(data.offset);
                     break;
+                
+                case 'central_line':
+                    updateCentralLine(data.eclipse);
+                    break;                    
+                
+                case 'north_umbra_line':
+                    updateNorthUmbraLine(data.eclipse);
+                    break;
+                    
+                case 'south_umbra_line':
+                    updateSouthUmbraLine(data.eclipse);
+                    break;
+                    
+                case 'south_penumbra_line':
+                    updateSouthPenUmbraLine(data.eclipse);
+                    break;
+                    
+                case 'north_penumbra_line':
+                    updateNorthPenUmbraLine(data.eclipse);
+                    break;
+                    
+                case 'east_penumbra_line':
+                    updateEastPenUmbraLine( data.eclipse,
+                                            data.north_pen_line,
+                                            data.south_pen_line);
+                    break;
+                    
+                case 'west_penumbra_line':
+                    updateWestPenUmbraLine( data.eclipse,
+                                            data.north_pen_line,
+                                            data.south_pen_line);
+                    break;
                     
                 default:
+                    console.log("CALCULATE WORKER: Invalid command.");
                     break;
             }
         }, false);
@@ -112,6 +148,251 @@ class CalculateWorker
             }
         }
         
+        function updateCentralLine(ecp)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            
+            try
+            {
+                var line = eclipse.drawCentralLine();
+                var times = eclipse.getCentralLineTimes();
+                
+                var msg = { 'cmd': 'eclipse_central_line_update',
+                            'line': JSON.stringify(line),
+                            'times': JSON.stringify(times)};
+                        
+                console.log("LINE WORKER: Central line drawn.");
+            }
+            
+            catch(error)
+            {
+                var msg = { 'cmd': 'eclipse_central_line_error'};
+                console.log("Central LINE DRAW ERROR: " + error.message);
+            }
+                       
+            postMessage(msg);            
+        }
+        
+        function updateNorthUmbraLine(ecp)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            
+           try
+           {
+                var line = eclipse.drawUmbraLimit(true);
+                var times = eclipse.getNorthUmbraTimes();
+                
+                var msg = { 'cmd': 'eclipse_north_umbra_line_update',
+                            'line': JSON.stringify(line),
+                            'times': JSON.stringify(times)};
+                console.log("LINE WORKER: North umbra line drawn.");
+           }
+           catch(error)
+           {
+                var msg = { 'cmd': 'eclipse_north_umbra_line_error'};
+                console.log("North umbra line DRAW ERROR: " + error.message);
+           }            
+            postMessage(msg);            
+        }
+        
+        function updateSouthUmbraLine(ecp)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            
+           try
+           {
+                var line = eclipse.drawUmbraLimit(false);
+                var times = eclipse.getSouthUmbraTimes();
+                
+                var msg = { 'cmd': 'eclipse_south_umbra_line_update',
+                            'line': JSON.stringify(line),
+                            'times': JSON.stringify(times)};
+                console.log("LINE WORKER: South umbra line drawn.");
+            }
+            catch(error)
+            {
+                var msg = { 'cmd': 'eclipse_south_umbra_line_error'};
+                console.log("South umbra line DRAW ERROR: " + error.message);
+            }
+            
+            postMessage(msg);
+        }
+        
+        function updateSouthPenUmbraLine(ecp)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            
+            try
+            {
+                var line = eclipse.drawPenumbralLimit(false);
+               
+                var msg = { 'cmd': 'eclipse_south_penumbra_line_update',
+                            'line': JSON.stringify(line)};
+                console.log("LINE WORKER: South penumbra line drawn.");
+            }
+            
+            catch(error)
+            {
+                var msg = { 'cmd': 'eclipse_south_penumbra_line_error'};
+                console.log("South penumbra line DRAW ERROR: " + error.message);
+            }
+            
+            postMessage(msg);            
+        }
+        
+        function updateNorthPenUmbraLine(ecp)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            
+            try
+            {
+                var line = eclipse.drawPenumbralLimit(true);
+                
+                var msg = { 'cmd': 'eclipse_north_penumbra_line_update',
+                            'line': JSON.stringify(line)};
+                console.log("LINE WORKER: North penumbra line drawn.");
+            }
+            
+            catch(error)
+            {
+                var msg = { 'cmd': 'eclipse_north_penumbra_line_error'};
+                console.log("North penumbra line DRAW ERROR: " + error.message);
+            }
+           
+            postMessage(msg);            
+        }
+        
+        function updateEastPenUmbraLine(ecp, northPenLine, southPenLine)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            if(northPenLine !== "null")
+            {
+                eclipse.setNorthPenumbraLine(JSON.parse(northPenLine));
+            }
+            if(southPenLine !== "null")
+            {
+                eclipse.setSouthPenumbraLine(JSON.parse(southPenLine));
+            }
+            
+           try
+           {
+                var line = eclipse.drawEastWestLimit(false);
+                var times = eclipse.getEastLineTimes();
+                
+                var msg = { 'cmd': 'eclipse_east_penumbra_line_update',
+                            'line': JSON.stringify(line),
+                            'times': JSON.stringify(times)};
+            }
+            catch(error)
+            {
+                var msg = { 'cmd': 'eclipse_east_penumbra_line_error'};
+                console.log("East penumbra line DRAW ERROR: " + error.message);
+            }
+                        
+            postMessage(msg);
+            console.log("LINE WORKER: East penumbra line drawn.");
+        }
+        
+        function updateWestPenUmbraLine(ecp, northPenLine, southPenLine)
+        {
+            var eclipse = new EclipseData(JSON.parse(ecp));
+            if(northPenLine !== "null")
+            {
+                eclipse.setNorthPenumbraLine(JSON.parse(northPenLine));
+            }
+            if(southPenLine !== "null")
+            {
+                eclipse.setSouthPenumbraLine(JSON.parse(southPenLine));
+            }
+            
+            try
+            {
+                var line = eclipse.drawEastWestLimit(true);
+                var times = eclipse.getWestLineTimes();                
+                
+                var msg = { 'cmd': 'eclipse_west_penumbra_line_update',
+                            'line': JSON.stringify(line),
+                            'times': JSON.stringify(times)};
+                console.log("LINE WORKER: West penumbra line drawn.");
+            }
+           
+            catch(error)
+            {
+                var msg = { 'cmd': 'eclipse_west_penumbra_line_error'};
+                console.log("West penumbra line DRAW ERROR: " + error.message);
+            }
+                       
+            postMessage(msg);
+        }
+        
+        /* Inputs an array of Lat / Long points from Eclipse Calculator
+         * and converts them into a Leaflet usable Lat/Long array.
+         * Returns empty array if invalid.
+         * @returns {Array} Leaflet usable Lat/Long array.
+         */
+        function positionToLeafArray(posArray)
+        {
+            var retArray = [];
+            
+            if(posArray)
+            {
+                if(Array.isArray(posArray))
+                {
+                    var lastLng = 0.0;
+                    var currentLng = 0.0;
+                    var doRev = false;
+                    var isNegative = false;
+                    for(var i = 0; i < posArray.length; i++)
+                    {
+                        currentLng = posArray[i].longitude;
+                        
+                        if(!doRev && (Math.abs(lastLng - currentLng) > 180.0))
+                        {
+                            console.log("Pushing new array.");                            
+                            doRev = true;
+                            if(lastLng < 0)
+                            {
+                                isNegative = true;
+                            }                                   
+                        }
+                        lastLng = currentLng;                        
+                        if(doRev)
+                        {
+                            // currentLng = rev(currentLng);
+                            if(isNegative)
+                            {
+                                currentLng = -1 * rev(Math.abs(360 - currentLng));
+                            }
+                            else
+                            {
+                                currentLng = rev(Math.abs(360 - currentLng));
+                            }
+                        }
+                        pointCount++;
+                        retArray.push({lat: posArray[i].latitude, lng: currentLng});
+                    }
+                   
+                }
+            }
+                  
+            return retArray;
+        }
+        
+        /*
+         * Makes sure value is inside circle 360.0 degrees!
+         * @param {Number} value
+         * @returns {Number}
+         */
+        function rev(/* Number */ value)
+        {
+            if (value > 360.0 || value < 0.0)
+            {
+                return (value - (Math.floor(value / 360.0) * 360.0));
+            }
+
+            return value;
+        }
+        
         function updateStatsAndPost()
         {
             var eclipseStats = m_eclipse.calculateLocalCircumstances(m_coords.latitude, m_coords.longitude, m_coords.altitude);
@@ -120,9 +401,12 @@ class CalculateWorker
 
             if (eclipseStats.isVisible)
             {
-                var sunrise = solarCalc.calcSunriseSetUTC(true, eclipseStats.circDates.getMidDate(), m_coords.latitude, m_coords.longitude);
-                var sunset = solarCalc.calcSunriseSetUTC(false, eclipseStats.circDates.getMidDate(), m_coords.latitude, m_coords.longitude);
-                var midSolarElevation = solarCalc.getSolarElevation(m_coords.latitude, m_coords.longitude, eclipseStats.circDates.getMidDate());
+                var eclipseMidDate = m_eclipse.toDate(eclipseStats.circDates.getMidDate());
+                eclipseMidDate.setUTCDate(eclipseMidDate.getUTCDate() + 1);
+                
+                var sunrise = solarCalc.calcSunriseSetUTC(true, eclipseMidDate, m_coords.latitude, m_coords.longitude);
+                var sunset = solarCalc.calcSunriseSetUTC(false, eclipseMidDate, m_coords.latitude, m_coords.longitude);
+                var midSolarElevation = solarCalc.getSolarElevation(m_coords.latitude, m_coords.longitude, m_eclipse.toDate(eclipseStats.circDates.getMidDate()));
 
                 msg['sunrise'] = JSON.stringify(sunrise);
                 msg['sunset'] = JSON.stringify(sunset);
@@ -145,13 +429,14 @@ class CalculateWorker
                         
             for(var i = 0; i < m_eclipseCatalog.getEclipseCount(); i++)
             {
-               var eclipseStats = m_eclipseCatalog.getEclipse(i).calculateLocalCircumstances(m_coords.latitude, m_coords.longitude, m_coords.altitude);
+               var eclipse = m_eclipseCatalog.getEclipse(i);
+               var eclipseStats = eclipse.calculateLocalCircumstances(m_coords.latitude, m_coords.longitude, m_coords.altitude);
                if(eclipseStats.isVisible)
                {
                    visibleIndices.push(i);
                    if(nextVisible === -1)
                    {
-                        if(eclipseStats.circDates.getC1Date() > current_date)
+                        if(eclipse.getMaxEclipseDate() > current_date)
                         {
                             nextVisible = i;
                         }

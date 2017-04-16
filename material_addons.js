@@ -12,7 +12,6 @@ class MaterialAddons
     {
         var DRAWER_SWIPE_TRIGGER = 0.15;
         var TAB_SWIPE_TRIGGER = 0.5;
-        var START_DELAY = 300;
         
         var layOut = document.querySelector('.mdl-layout');;
         var mainPage = $("main");
@@ -24,25 +23,30 @@ class MaterialAddons
         var appDrawer = $(".mdl-layout__drawer");
         
         var spinner = $(".mdl-spinner");
+        
+        var drawerButton;
                 
         var drawerToggleCalled = false;
         var screenWidth = geContentWidth();
-        var pageCount = getPageCount();
         var pageIndex = getCurrentPageIndex();
         var swipeOccurring = false;
         var swipeOff = false;
+        var ignorePageChange = false;
         
         var headerChangeCallBack = null;
+        var mdlCompleteCallBack = null;
+        var mdlCompleteCallOnRegister = false;
         var zeroHeaderFooter = false;        
         
         var disabledPages = [];
         
         var windowResizeFunc = null;
+        var changePageFunc = null;
         
-        watchHeaderChanges();
+        mdlFinishedUpgrades();
         addCustomScroller();
         bindEvents();
-        
+                       
         function addCustomScroller()
         {
             var userStr = navigator.userAgent.toLowerCase();
@@ -75,24 +79,28 @@ class MaterialAddons
         
         function onTabClick(event)
         {
-            var target =  $(this).attr("href").slice(1);
-                        
-            for(var idx = 0; idx < privPages.toArray().length; idx++)
+            var idx = $(this).index();
+            
+            console.log("Tab click fired.");
+            
+            if(idx !== pageIndex)
             {
-                if(privPages[idx].id === target)
+                if(!ignorePageChange)
                 {
-                    break;
-                }
+                    mainPage.animationEndOne(function(event)
+                    {   
+                        pageIndex = idx;
+                        checkIfDisabled();
+                        if(changePageFunc)
+                        {
+                            event.currentPageIdx = idx;
+                            changePageFunc(event);
+                        }
+                    }); 
+                }                
             }
             
-            if(idx === privPages.toArray().length)
-            {
-                idx = 0;
-            }
-                       
-            pageIndex = idx;
-            checkIfDisabled();
-            console.log("Click fired.  Index: " + pageIndex);
+            ignorePageChange = false;
         }
         
         function checkIfDisabled()
@@ -127,6 +135,7 @@ class MaterialAddons
     
         function bindEvents()
         {
+            console.log("Binding material addon events.");
             $( window ).resize(onResize);
             swipeOn();
             privTabs.click(onTabClick);
@@ -177,7 +186,6 @@ class MaterialAddons
                         if ((Math.abs(event.distX) > (screenWidth * TAB_SWIPE_TRIGGER)) && !swipeOccurring)
                         {
                             mainPage.swipeOff();
-                            console.log("RIGHT half way!");
                             swipeOccurring = true;
 
                             var currentPage = $(privPages[pageIndex]).children("div.page-content");
@@ -187,16 +195,21 @@ class MaterialAddons
 
                             currentPage.animationEndOne(function (event)
                             {
-                                console.log("First animation ended.");
                                 currentPage.removeClass("eclipse-content-swipe-out-right");
                                 nextPage.addClass("eclipse-content-swipe-in-right");
+                                ignorePageChange = true;
                                 privTabs[pageIndex - 1].click();
                                 nextPage.animationEndOne(function (event)
                                 {
-                                    console.log("Second animation ended.");
                                     nextPage.removeClass("eclipse-content-swipe-in-right");
                                     mainPage.swipe(onSwipe);
+                                    pageIndex = event.currentPageIdx = getCurrentPageIndex();
                                     checkIfDisabled();
+                                    
+                                    if(changePageFunc)
+                                    {                                        
+                                        changePageFunc(event);
+                                    }
                                 });
                             });
                         }
@@ -211,7 +224,6 @@ class MaterialAddons
                     if((Math.abs(event.distX) > (screenWidth * TAB_SWIPE_TRIGGER)) && !swipeOccurring )
                     {
                         mainPage.swipeOff();
-                        console.log("LEFT half way!");
                         swipeOccurring = true;
                         
                         var currentPage = $(privPages[pageIndex]).children("div.page-content");
@@ -221,16 +233,22 @@ class MaterialAddons
                         
                         currentPage.animationEndOne(function(event)
                         {
-                            console.log("First animation ended.");
                             currentPage.removeClass("eclipse-content-swipe-out-left");
                             nextPage.addClass("eclipse-content-swipe-in-left");
+                            ignorePageChange = true;
                             privTabs[pageIndex + 1].click();
                             nextPage.animationEndOne(function(event)
                             {                            
-                                console.log("Second animation ended.");
                                 nextPage.removeClass("eclipse-content-swipe-in-left");
                                 mainPage.swipe(onSwipe);
+                                
+                                pageIndex = event.currentPageIdx = getCurrentPageIndex();
                                 checkIfDisabled();
+                                
+                                if(changePageFunc)
+                                {                                   
+                                    changePageFunc(event);
+                                }
                             });
                         });
                     }
@@ -264,13 +282,18 @@ class MaterialAddons
         
         function showHeaderFooter()
         {
-            header.addClass("eclipse-header-transition");  
-            footer.addClass("eclipse-footer-transition");
+            if(!header.hasClass("eclipse-header-transition"))
+            {
+                header.addClass("eclipse-header-transition");
+            }
+            if(!footer.hasClass("eclipse-footer-transition"))
+            {
+                footer.addClass("eclipse-footer-transition");
+            }
                         
             zeroHeaderFooter = false;
             if(headerChangeCallBack)
             {
-                // headerChangeCallBack();
                 footer.transitionEndOne(headerChangeCallBack);
             }            
         }
@@ -281,47 +304,172 @@ class MaterialAddons
             if(headerChangeCallBack)
             {
                 headerChangeCallBack();
-                //footer.transitionEndOne(headerChangeCallBack);
             }
             header.removeClass("eclipse-header-transition");
             footer.removeClass("eclipse-footer-transition");
         }
         
+        function initDrawerButtonUpgrades()
+        {
+            drawerButton =  $("div.mdl-layout__drawer-button");
+            drawerButton.addClass("eclipse-drawer-button");
+        }
+        
         /*
-         * We use this function to add a class to the dynamically created app drawer button.
+         * We use this function to modify anything after MDL has finished processing upgrades
          * This keeps the app drawer button from creating a border when focused by the browser.
          * @returns {undefined}
          */
-        function watchHeaderChanges()
+        function mdlFinishedUpgrades()
         {
-            // select the target node
-            var markUpsComplete = false;
-            var target = header[0];
-
-            // create an observer instance
-            var initObserver = new MutationObserver(function(mutations) 
+            if(!layOut.classList.contains("is-upgraded"))  // TODO: Ensure this works in all reload cases, may have seen cache bug in old Chrome version?
             {
-                if(mutations.length >= 3)
+                // select the target node
+                var markUpsComplete = false;
+                var target = layOut;
+
+                // create an observer instance
+                var initObserver = new MutationObserver(function(mutations) 
                 {
-                    if(!markUpsComplete)
+                    initObserver.disconnect();
+                    console.log("MDL mutations found: " + mutations.length);
+                    if(mutations.length > 0)
                     {
-                        markUpsComplete = true; // To ensure we only do this once.
-                        $("div.mdl-layout__drawer-button").addClass("eclipse-drawer-button");
-                        header.addClass("eclipse-header-transition");  
-                        footer.addClass("eclipse-footer-transition");
+                        if(!markUpsComplete)
+                        {
+                            markUpsComplete = true; // To ensure we only do this once.
+                            initDrawerButtonUpgrades();
+                            // showHeaderFooter();
+                            if(mdlCompleteCallBack)
+                            {
+                                mdlCompleteCallBack();
+                            }
+                            else
+                            {
+                                mdlCompleteCallOnRegister = true;
+                            }
+                        }
                     }
+                });
+
+                // configuration of the observer:
+                var initConfig = {attributes: true};
+
+                // pass in the target node, as well as the observer options
+                initObserver.observe(target, initConfig);
+            }
+            else
+            {
+                console.log("MDL already upgraded.");
+                initDrawerButtonUpgrades();
+                if(mdlCompleteCallBack)
+                {
+                    console.log("Callback to MDL complete.");
+                    window.setTimeout(mdlCompleteCallBack, 1);
                 }
-                
-                initObserver.disconnect();
-            });
-            
-            // configuration of the observer:
-            var initConfig = {childList: true};
-            
-            // pass in the target node, as well as the observer options
-            initObserver.observe(target, initConfig);
+                else
+                {
+                    mdlCompleteCallOnRegister = true;
+                }
+            }
             
         }
+        
+        /* Change page to index provided.
+         * Returns true upon success.
+         * @param {Number} idx -- The page index to change to.
+         * @returns {Boolean}
+         */
+        this.changePage = function(idx)
+        {
+            if(idx)
+            {
+                if(typeof(idx) === 'number')
+                {
+                    var currentPage = getCurrentPageIndex();
+                    if(idx !== currentPage)
+                    {
+                        if(idx > 0 && idx < getPageCount())
+                        {
+                            if(idx > currentPage)
+                            {
+                                mainPage.swipeOff();
+                                swipeOccurring = true;
+
+                                var currentPage = $(privPages[currentPage]).children("div.page-content");
+                                var nextPage = $(privPages[idx]).children("div.page-content");
+
+                                currentPage.addClass("eclipse-content-swipe-out-left");
+
+                                currentPage.animationEndOne(function(event)
+                                {
+                                    currentPage.removeClass("eclipse-content-swipe-out-left");
+                                    nextPage.addClass("eclipse-content-swipe-in-left");
+                                    ignorePageChange = true;
+                                    privTabs[idx].click();
+                                    nextPage.animationEndOne(function(event)
+                                    {                            
+                                        nextPage.removeClass("eclipse-content-swipe-in-left");
+                                        mainPage.swipe(onSwipe);
+                                        
+                                        pageIndex = event.currentPageIdx = getCurrentPageIndex();
+                                        checkIfDisabled();
+                                        swipeOccurring = false;
+                                        
+                                        if(changePageFunc)
+                                        {
+                                            changePageFunc(event);
+                                        }
+                                    });
+                                });
+                            }
+                            else
+                            {
+                                mainPage.swipeOff();
+                                swipeOccurring = true;
+
+                                var currentPage = $(privPages[currentPage]).children("div.page-content");
+                                var nextPage = $(privPages[idx]).children("div.page-content");
+
+                                currentPage.addClass("eclipse-content-swipe-out-right");
+
+                                currentPage.animationEndOne(function (event)
+                                {
+                                    currentPage.removeClass("eclipse-content-swipe-out-right");
+                                    nextPage.addClass("eclipse-content-swipe-in-right");
+                                    ignorePageChange = true;
+                                    privTabs[idx].click();
+                                    nextPage.animationEndOne(function (event)
+                                    {
+                                        nextPage.removeClass("eclipse-content-swipe-in-right");
+                                        mainPage.swipe(onSwipe);
+                                        
+                                        pageIndex = event.currentPageIdx = getCurrentPageIndex();
+                                        checkIfDisabled();
+                                        swipeOccurring = false;
+                                        
+                                        if(changePageFunc)
+                                        {                                            
+                                            changePageFunc(event);
+                                        }
+                                    });
+                                });                                
+                            }
+                            return true;
+                        }
+                    }                    
+                }
+                else
+                {
+                    throw "Page index must be numberic.";
+                }
+            }
+            else
+            {
+                throw "Must provide page index to change to.";
+            }
+            return false;
+        };
         
         this.disableYScroll = function()
         {
@@ -335,7 +483,24 @@ class MaterialAddons
         
         this.onHeaderChange = function(func)
         {
-            headerChangeCallBack = func;
+            if(typeof(func) === "function")
+            {
+                headerChangeCallBack = func;
+            }
+        };
+        
+        this.onMDLComplete = function(func)
+        {
+            if(typeof(func) === "function")
+            {
+                mdlCompleteCallBack = func;
+                
+                if(mdlCompleteCallOnRegister)
+                {
+                    mdlCompleteCallOnRegister = false;
+                    mdlCompleteCallBack();
+                }
+            }
         };
         
         this.getHeaderHeight = function()
@@ -398,18 +563,38 @@ class MaterialAddons
         
         this.onPageChange = function(func)
         {
-            mainPage.animationEnd(function(event)
+            if(func)
             {
-                event.currentPageIdx = getCurrentPageIndex();
-                func(event);
-            });
+                if(typeof(func) === 'function')
+                {
+                    changePageFunc = func;
+                }
+            }
+            else
+            {            
+                throw "Invalid input to onPageChange.";
+            }
         };
         
         /* Show or hides the header and footer, returns false if removed, else true.
          * @returns {Boolean}
          */
-        this.toggleHeaderFooter = function()
-        {
+        this.toggleHeaderFooter = function(forceShow)
+        {            
+            if(forceShow !== undefined)
+            {
+                if(forceShow)
+                {
+                    showHeaderFooter();
+                    return true;
+                }
+                else
+                {
+                    removeHeaderFooter();
+                    return false;
+                }
+            }
+            
             if(header.hasClass("eclipse-header-transition"))
             {
                 removeHeaderFooter();
@@ -492,6 +677,67 @@ class MaterialAddons
         {
             layOut.MaterialLayout.toggleDrawer();
         };
+        
+        this.spinBackDrawerButton = function()
+        {
+            if(drawerButton)
+            {
+                if(!drawerButton.hasClass("eclipse-rotate-drawer-button"))
+                {
+                    drawerButton.addClass("eclipse-rotate-drawer-button");
+                    
+                    drawerButton.clickOne(function()
+                    {
+                        layOut.MaterialLayout.toggleDrawer();
+                        
+                        console.log("Drawer open prevented.");
+                        
+                        drawerButton.removeClass("eclipse-rotate-drawer-button");
+                        drawerButton.transitionEndOne(function()
+                        {
+                            drawerButton.children("i").html("menu");
+                        }); 
+                    });
+
+                    drawerButton.transitionEndOne(function()
+                    {
+                        drawerButton.children("i").html("arrow_forward");
+                    });
+                }
+                else
+                {
+                    drawerButton.removeClass("eclipse-rotate-drawer-button");
+                    drawerButton.transitionEndOne(function()
+                    {
+                        drawerButton.clickOff();
+                        drawerButton.children("i").html("menu");
+                    });
+                }
+            }
+        };
+        
+        this.unSpinDrawerButton = function()
+        {
+            if(drawerButton.hasClass("eclipse-rotate-drawer-button"))
+            {
+                drawerButton.removeClass("eclipse-rotate-drawer-button");
+                drawerButton.transitionEndOne(function()
+                {
+                    drawerButton.clickOff();
+                    drawerButton.children("i").html("menu");
+                });
+            }            
+        };
+        
+        this.isDrawerButtonSpun = function()
+        {
+            if(drawerButton.hasClass("eclipse-rotate-drawer-button"))
+            {
+                return true;
+            } 
+            
+            return false;
+        };
     
     }
     
@@ -553,8 +799,10 @@ class DialogBox
             
             // Dialog.close() Bug fix see: https://github.com/google/material-design-lite/issues/4328
             // TODO: Remove with MDL 2.x.x
-            document.querySelector('.mdl-layout__content').style.overflowX = 'auto';
-            document.querySelector('.mdl-layout__content').style.overflowX = '';
+            // document.querySelector('.mdl-layout__content').style.overflowY = 'auto';
+            // document.querySelector('.mdl-layout__content').style.overflowY = '';
+            document.querySelector('.mdl-list').style.overflowY = 'auto';
+            document.querySelector('.mdl-list').style.overflowY = '';
             
             okButton.clickOff();
             closeButton.clickOff();

@@ -8,6 +8,20 @@ and open the template in the editor.
     Author     : Josh
 */
 
+/* Prevents text/image selection on right click and long press */
+.eclipse-unselectable
+{
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.mdl-layout__obfuscator.is-visible
+{
+    pointer-events: auto;
+    opacity: 0;
+}
 
 .no-eclipse-icon 
 {
@@ -60,6 +74,11 @@ and open the template in the editor.
     font-family: "Helvetica","Arial",sans-serif;
     font-weight: 400;
     line-height: 20px;
+}
+
+.eclipse-time-travel-font
+{
+    color: yellow;
 }
 
 .eclipse-content-swipe-in-right
@@ -160,9 +179,9 @@ and open the template in the editor.
     position: relative;
     
     transition-property: all;
-    transition-duration: .3s;
+    transition-duration: .4s;
     transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
-    transition-delay: .1s;
+    transition-delay: .2s;
 }
 
 .eclipse-header-transition
@@ -181,14 +200,35 @@ and open the template in the editor.
     z-index: 1 !important;
     
     transition-property: bottom;
-    transition-duration: .3s;
+    transition-duration: .4s;
     transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
-    transition-delay: .1s;
+    transition-delay: .2s;
 }
 
 .eclipse-footer-transition
 {
-    bottom: 0px !important;
+    bottom: 0 !important;
+}
+
+@media only screen and (max-width: 320px) 
+{
+   .mdl-mini-footer__link-list li 
+   {
+        margin-bottom: 0;
+        margin-right: 12px;
+    }
+}
+
+.eclipse-li-location
+{
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.eclipse-location-icon-size
+{
+    font-size: x-large;
+    transform: translateY(-10%);
 }
 
 @keyframes footer-animation 
@@ -232,7 +272,8 @@ and open the template in the editor.
     width: 99%;
     overflow: hidden;
     overflow-y: scroll;
-    flex-grow: 3;
+    flex-grow: 3;    
+    margin-top: 0
 }
 
 .eclipse-stats-icon
@@ -263,11 +304,18 @@ and open the template in the editor.
     flex-wrap: nowrap;
 }
 
+.eclipse-border-bottom
+{
+    border-bottom: 1px solid #ddd;
+}
+
 .eclipse-drawer
 {
     overflow: hidden;
-    width: 280px;
-    transform: translateX(-290px);
+    width: 300px;
+    max-width: 90%;
+    transform: translateX(-310px);
+    box-shadow: 0 16px 24px 2px rgba(0,0,0,0.14),0 6px 30px 5px rgba(0,0,0,0.12),0 8px 10px -5px rgba(0,0,0,0.4);
 }
 
 .eclipse-map
@@ -309,7 +357,7 @@ and open the template in the editor.
 {
     z-index: 9999;
     position: fixed;
-    top: 10em;
+    top: 8.2em;
     left: -15vw;
     
     transition-property: all;
@@ -340,9 +388,232 @@ and open the template in the editor.
 .eclipse-drawer-button
 {
    outline: none; 
-   border: none; 
+   border: none;
+   
+   transition-property: all;
+   transition-duration: .3s;
+   transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+   transition-delay: .1s;
 }
 
+.eclipse-map-menu-button
+{
+    display: none;
+    position: absolute;
+    right: 0.25em;
+    top: .5em;
+}
+
+.eclipse-map-search-button
+{
+    display: none;
+    position: absolute;
+    right: 2em;
+    top: -.35em;
+    max-width: calc(100% - 5em);
+    min-width: 50%;
+    width: 400px;
+    z-index: 9999;
+}
+
+.eclipse-map-search-holder
+{   
+    width: 100%;
+    color: rgba(0,0,0,.87);
+    background-color: white;
+    height: 2em;
+    border-radius: 2px;
+    left: -2.5em;
+}
+
+.eclipse-no-show
+{
+     display: none;
+}
+
+.eclipse-map-search-list
+{
+    visibility: hidden;
+    position: absolute;
+    height: 1px;
+    max-height: calc(100vh - 48px);
+    background-color: white;
+    width: 100%;
+    z-index: 999;
+    top: 3em;
+    overflow-y: scroll;
+    box-shadow: 0 0 2px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.24), inset 0 4px 6px -4px rgba(0,0,0,.24);
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-map-search-list-show
+{
+    visibility: visible !important;
+    height: 16em !important;
+    max-height: calc(100vh - 96px) !important;
+}
+
+.eclipse-map-search-input
+{
+    height: 100%;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;        
+}
+
+.eclipse-app-title-shift
+{
+    left: -1em;
+}
+
+@media only screen and (min-width: 560px) 
+{
+   .eclipse-map-search-button
+    {
+        display: none;
+        position: absolute;
+        right: 2em;
+        top: -.25em;
+        width: 50%;
+        z-index: 9999;
+    }
+    
+    .eclipse-map-search-holder
+    {   
+        width: calc(90% - 2em);
+        color: rgba(0,0,0,.87);
+        background-color: white;
+        height: 2em;
+        border-radius: 2px;
+        left: 0;
+    }
+    
+    .eclipse-map-search-list
+    {
+        visibility: hidden;
+        position: absolute;
+        height: 1px;
+        max-height: calc(100vh - 48px);
+        background-color: white;
+        width: calc(50% - 5em);
+        z-index: 999;
+        top: 3em;
+        right: 2em;
+        overflow-y: scroll;
+        box-shadow: 0 0 2px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.24), inset 0 4px 6px -4px rgba(0,0,0,.24);
+        transition-property: all;
+        transition-duration: .3s;
+        transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+        transition-delay: .1s;
+    }   
+    
+}
+
+.eclipse-disabled-text
+{
+    color: rgba(0, 0, 0, .45);
+}
+
+.eclipse-search-text
+{
+    font-size: small;
+    height: 3em;
+    max-height: 3em;
+}
+
+.eclipse-hide-header-text
+{
+    color: transparent !important;
+}
+
+.eclipse-rotate-drawer-button
+{    
+    transform: rotate(180deg);
+}
+
+.eclipse-map-times-zulu
+{
+    visibility: hidden;
+    position: absolute;
+    bottom: 7em;
+    right: -9em;
+    z-index: 999;
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-map-times-zulu-trans
+{
+    visibility: visible !important;
+    right: 1em;
+}
+
+.eclipse-map-times-local
+{
+    visibility: hidden;
+    position: absolute;
+    bottom: 7em;
+    left: -9em;
+    z-index: 999;
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-map-times-local-trans
+{
+    visibility: visible !important;
+    left: 1em;
+}
+
+.eclipse-animation-time-background
+{
+    background-color: rgba(222,222,222, 0.7);
+}
+
+.eclipse-realtime-shadow
+{
+    visibility: hidden;
+    position: absolute;
+    top: -5%;
+    z-index: 999;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-force-map-button
+{   
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.eclipse-realtime-shadow-trans
+{
+    visibility: visible !important;
+    top: 120px;
+}
+
+.eclipse-sim-info-trans
+{
+    visibility: visible !important;
+    top: 1%;
+}
 
 .simulation-content
 {
@@ -369,12 +640,12 @@ and open the template in the editor.
     height:200px;
     width:200px;
     background-color: yellow;
-    left:200px;
-    top:200px;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
     color: #fff;
     border-radius:50%;
-    position: absolute;
-    display: none;
+    position: relative;
 }
 
 #moon
@@ -383,9 +654,14 @@ and open the template in the editor.
     width:200px;
     background-color: black;
     border-radius:50%;
-    top:-100px;
-    left:0px;
+    top:0;
+    left:0;
     color: #fff;
     position: relative;
-    display: none;
+    visibility: hidden;
+}
+
+.eclipse-moon-visible
+{
+    visibility: visible !important;    
 }

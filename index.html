@@ -11,7 +11,7 @@ and open the template in the editor.
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, shrink-to-fit=no, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi">
         <meta name="theme-color" content="indigo">
 
         <link rel="apple-touch-icon" href="images/favicon.png" >
@@ -30,15 +30,18 @@ and open the template in the editor.
         <script src="dialog-polyfill/dialog-polyfill.js"></script>
         <script src="material_addons.js"></script>
         
-        <!-- LeafletJS API -->
-        <link rel="stylesheet" href="leaflet/leaflet.css" />
-        <script src="leaflet/leaflet.js"></script>
-        
+        <!-- Openlayers API -->
+        <link rel="stylesheet" href="ol/ol.css" />
+        <script src="ol/ol.js"></script>
+                
         <!-- Eclipse Chaser Stylesheets -->
         <link rel="stylesheet" href="eclipse.css">
         <link rel="stylesheet" href="extra-icons.css">
         
+        <script src="arc.js"></script>
+        <script src="tzlookup/tzlookup.js"></script>
         <script src="EclipseCalc.js"></script>
+        <script src="shadowAnimator.js"></script>
         <script src="eclipse_ui_material.js"></script>
     </head>
 
@@ -65,18 +68,80 @@ and open the template in the editor.
         </div>
         <!-- MDL SNACKBAR -->
         
+        <!-- MAP SEARCH MENU -->
+        <ul id="map-search-menu" class="mdl-list eclipse-map-search-list">
+            <li class="mdl-list__item eclipse-disabled-text"><span class="mdl-list__item-primary-content eclipse-search-text">Search locations...</span></li>
+            <li class="mdl-list__item"><span class="mdl-list__item-primary-content eclipse-search-text"></span></li>
+            <li class="mdl-list__item"><span class="mdl-list__item-primary-content eclipse-search-text"></span></li>
+        </ul>
+        <!-- MAP SEARCH MENU END -->
+        
         <!-- Simple header with fixed tabs. -->
         <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
             
             <!-- LOADING SPINNER -->
             <div class="mdl-spinner mdl-js-spinner loading-spinner"></div>
             <!-- LOADING SPINNER END -->
-                
+            
+            <!-- MAP MENU -->
+            <ul id="map-menu" class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
+                data-mdl-for="map-menu-button">
+                <li disabled="true" class="mdl-menu__item" id="animate-shadow">Animate Shadow</li>
+                <li class="mdl-menu__item" id="realtime-animate">Realtime Shadow</li>
+                <li class="mdl-menu__item eclipse-no-show" id="first-contact-sim">First Contact</li>
+                <li class="mdl-menu__item eclipse-no-show" id="second-contact-sim">Second Contact</li>
+                <li class="mdl-menu__item eclipse-no-show" id="mid-eclipse-sim">Mid Eclipse</li>
+                <li class="mdl-menu__item eclipse-no-show" id="third-contact-sim">Third Contact</li>
+                <li class="mdl-menu__item eclipse-no-show" id="fourth-contact-sim">Fourth Contact</li>
+            </ul>
+            <!-- MAP MENU END -->
+            
+            <!-- ANIMATION TIME POPUPS -->
+            <div id="local-time-pop" class="eclipse-map-times-local">
+                <span class="mdl-chip mdl-chip--contact eclipse-animation-time-background">
+                    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">L</span>
+                    <span id="local-animate-time" class="mdl-chip__text">12:00 PM</span>
+                </span>
+            </div>
+            <div id="zulu-time-pop" class="eclipse-map-times-zulu">
+                <span class="mdl-chip mdl-chip--contact eclipse-animation-time-background">
+                    <span class="mdl-chip__contact mdl-color--teal mdl-color-text--white">Z</span>
+                    <span  id="zulu-animate-time"  class="mdl-chip__text">10:00 AM</span>
+                </span>
+            </div>
+            
+            <span id="realtime-shadow" class="mdl-chip eclipse-animation-time-background eclipse-realtime-shadow">
+                <span class="mdl-chip__text">Realtime</span>
+            </span>
+                        
+            <!-- ANIMATION TIME POPUPS END -->
+                            
             <header class="mdl-layout__header eclipse-header">
                 <div class="mdl-layout__header-row eclipse-header-row">
-                    <!-- Title -->
+                    
+                    <!-- TITLE -->
                     <span id="eclipse-title" class="mdl-layout-title">Eclipse Chaser Mobile!</span>
-                    <span id="eclipse-title-date" class="mdl-list__item-sub-title">January 01, 1900</span>
+                    <span id="eclipse-title-date" class="mdl-list__item-sub-title eclipse-app-title-shift">January 01, 1900</span>
+                    <!-- TITLE END -->
+                    
+                    <!-- MAP SEARCH -->
+                    <div id="map-search-box" class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
+                                mdl-textfield--floating-label mdl-textfield--align-right eclipse-map-search-button">
+                        <label class="mdl-button mdl-js-button mdl-button--icon"
+                               for="map-search-input">
+                            <i id="search-icon" class="material-icons">search</i>
+                        </label>
+                        <div class="mdl-textfield__expandable-holder eclipse-map-search-holder">
+                            <input class="mdl-textfield__input eclipse-map-search-input" type="text" name="sample"
+                                   id="map-search-input">
+                        </div>
+                    </div>
+                    <!-- MAP SEARCH END -->
+                    
+                    <button id="map-menu-button"
+                            class="mdl-button mdl-js-button mdl-button--icon eclipse-map-menu-button">
+                        <i class="material-icons">more_vert</i>
+                    </button>
                 </div>
                 
                 <!-- Tabs -->
@@ -90,11 +155,11 @@ and open the template in the editor.
 
             <!-- APP DRAWER -->
             <div id="app_drawer" class="mdl-layout__drawer eclipse-drawer">
-                <span class="mdl-layout-title">Choose Eclipse</span>
+                <span class="mdl-layout-title eclipse-border-bottom">Choose Eclipse</span>
 
                 <div class="drawer-cointainer">
                     <!-- ECLIPSE CHOICE LIST -->
-                    <ul id="eclipse_list" class="mdl-list eclipse-choice-list">                       
+                    <ul id="eclipse_list" class="mdl-list eclipse-choice-list eclipse-border-bottom">                       
                     </ul>
                     <!-- ECLIPSE CHOICE LIST END -->
 
@@ -124,7 +189,7 @@ and open the template in the editor.
             <main class="mdl-layout__content">
                 
                 <!-- CIRCUMSTANCES CONTENT -->
-                <section class="mdl-layout__tab-panel is-active eclipse-content-fade-in" id="circumstances-tab">
+                <section class="mdl-layout__tab-panel is-active eclipse-content-fade-in eclipse-unselectable" id="circumstances-tab">
                     <div id="circumstances" class="page-content">
                         
                         <!-- ECLIPSE TYPE LIST -->
@@ -162,13 +227,13 @@ and open the template in the editor.
                        
 
                             <tbody>
-                                <tr>
+                                <tr id="suncrise">
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunrise</span><br><span id="sunrise_time">12:00:00 PM</span></td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="sunrise_count">-364:23:59:59</span></td>
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
-                                <tr>
+                                <tr id="partial-begins">
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td">
                                         <span>Partial Phase Begins</span>                                        
                                         <br><i id="c1_horiz" class="icon-sunset eclipse-stats-icon"></i>
@@ -193,7 +258,7 @@ and open the template in the editor.
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="total_duration">7:31</span></td>
                                 </tr>
 
-                                <tr>
+                                <tr id="mid-eclipse">
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td">
                                         <span>Mid Eclipse At</span>
                                         <br><i id="mid_horiz" class="icon-sunset eclipse-stats-icon"></i>
@@ -216,7 +281,7 @@ and open the template in the editor.
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
-                               <tr>
+                               <tr id="partial-ends">
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td">
                                         <span>Partial Phase Ends</span>
                                         <br><i id="c4_horiz" class="icon-sunset eclipse-stats-icon"></i>
@@ -227,7 +292,7 @@ and open the template in the editor.
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
                                 </tr>
 
-                                <tr>
+                                <tr id="sunset">
                                     <td class="mdl-data-table__cell--non-numeric eclipse-td">
                                         <span>Local Sunset</span>
                                         <br><span  id="sunset_time">12:00:00 PM</span>
@@ -245,8 +310,9 @@ and open the template in the editor.
                 <!-- CIRCUMSTANCES CONTENT END -->
 
                 <!-- MAP CONTENT -->
-                <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="map-tab">
+                <section class="mdl-layout__tab-panel eclipse-content-fade-in eclipse-unselectable" id="map-tab">
                     <div id="map" class="page-content eclipse-map"  style="display: none;">
+                        
                         <div id="zoom-buttons" class="eclipse-zoom-button-placement eclipse-zoom-button-placement-transition">
                             <button id="map-zoom-in-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored">
                                 <i class="material-icons">add</i>
@@ -261,14 +327,20 @@ and open the template in the editor.
                             <button id="map-location-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--primary">
                                 <i class="material-icons">my_location</i>
                             </button>
-                        </div>
-                    </div>              
+                        </div>                        
+                        
+                    </div>
                 </section>
                 <!-- MAP CONTENT END -->
 
                 <!-- SIMULATION CONTENT -->
                 <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="simulation-tab">
+                   
+                    
                     <div class="page-content simulation-content"  style="display: none;">
+                        <span id="contact-point" class="mdl-chip eclipse-animation-time-background eclipse-realtime-shadow">
+                            <span class="mdl-chip__text">Mid Eclipse</span>
+                        </span>                        
                         <div id="sun">
                             <div id="moon">
                             </div>
@@ -297,13 +369,14 @@ and open the template in the editor.
             <!-- FIXED FOOTER -->
             <footer class="mdl-mini-footer eclipse-footer">
                 <ul class="mdl-mini-footer__link-list eclipse-footer-list">
+                    <li class="eclipse-li-location"><a href="#"><i id="location-icon" class="material-icons eclipse-location-icon-size">location_off</i></a></li>
                     <li><a href="#">Lat<br><span id='lat'>00.00</span></a></li>
                     <li><a href="#"></a></li>
                     <li><a href="#">Long<br><span id='long'>000.00</span></a></li>
                     <li><a href="#"></a></li>
                     <li><a href="#">Alt<br><span id='alt'>-0000</span> ft</a></li>
                     <li><a href="#"></a></li>
-                    <li><a href="#">Time<br><span id='time'>12:00:00PM</span></a></li>
+                    <li><a href="#">Time (<span id="zone"></span>)<br><span id='time'>12:00:00PM</span></a></li>
                 </ul>
             </footer>
             <!-- FIXED FOOTER END -->

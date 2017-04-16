@@ -107,6 +107,8 @@
 // (27) tan f2
 //
 
+"use strict";
+
 var VALID_LINE_LENGTH = 115;				// Valid length of eclipse data on each line.x
 var DATE_START_IDX = 13;					// Date information for eclipse starts here.
 var LAT_START_IDX = 81;						// Latitude for eclipse midpoint starts here in catalog.
@@ -232,7 +234,7 @@ function PositionLimits()
  * get functions return null upon no date.
  * Invalid dates are null. 
  */
-function CircumstanceDates(circumstances)
+function CircumstanceDates(copyObj)
 {
     this.c1Date = null;
     this.c2Date = null;
@@ -240,146 +242,64 @@ function CircumstanceDates(circumstances)
     this.c3Date = null;
     this.c4Date = null;
     
+    if(copyObj)
+    {
+        this.c1Date = copyObj.c1Date;
+        this.c2Date = copyObj.c2Date;
+        this.midDate = copyObj.midDate;
+        this.c3Date = copyObj.c3Date;
+        this.c4Date = copyObj.c4Date;
+    }
+       
     this.setC1Date = function(date)
     {
-        if (typeof (date.getTime) === "function")
-        {
-            if (!isNaN(date.getTime()))
-            {
-                this.c1Date = date;
-            }
-        }
+        this.c1Date = date;
     };
     
     this.setC2Date = function(date)
     {
-        if (typeof (date.getTime) === "function")
-        {
-            if (!isNaN(date.getTime()))
-            {
-               if(date.getTime() === 0)
-               {
-                   console.log("Zero found.");
-               }
-               this.c2Date = date;
-            }
-        }
+       this.c2Date = date;
     };
     
     this.setMidDate = function(date)
     {
-        if (typeof (date.getTime) === "function")
-        {
-            if (!isNaN(date.getTime()))
-            {
-                this.midDate = date;
-            }
-        }
+        this.midDate = date;
     };
     
     this.setC3Date = function(date)
     {
-        if (typeof (date.getTime) === "function")
-        {
-            if (!isNaN(date.getTime()))
-            {
-                this.c3Date = date;
-            }
-        }
+        this.c3Date = date;
     };
     
     this.setC4Date = function(date)
     {
-        if (typeof (date.getTime) === "function")
-        {
-            if (!isNaN(date.getTime()))
-            {
-               this.c4Date = date;
-            }
-        }
+        this.c4Date = date;
     };
     
     this.getC1Date = function()
     {
-        if (this.c1Date !== null)
-        {
-            return new Date(this.c1Date);
-        }
-        return null;
+        return this.c1Date;
     };
     
     this.getC2Date = function()
     {
-        if (this.c2Date !== null)
-        {
-            return  new Date(this.c2Date);
-        }
-        return null;
+        return this.c2Date;
     };
     
     this.getMidDate = function()
     {
-        if (this.midDate !== null)
-        {
-            return  new Date(this.midDate);
-        }
-        return null;
+        return this.midDate;
     };
     
     this.getC3Date = function()
     {
-        if (this.c3Date !== null)
-        {
-            return  new Date(this.c3Date);
-        }
-        return null;
+        return this.c3Date;
     };
     
     this.getC4Date = function()
     {
-        if (this.c4Date !== null)
-        {
-            return  new Date(this.c4Date);
-        }
-        return null;
+        return this.c4Date;
     };
-    
-    /*
-     * Copy constructor function
-     * @param {CircumstanceDates} circumstances
-     * @returns {CircumstanceDates}
-     */
-    this.set = function(circumstances)
-    {
-        if(typeof(circumstances) === 'object')
-        {
-            if(circumstances !== null)
-            {
-                if(circumstances.c1Date !== null)
-                {
-                    this.c1Date = new Date(circumstances.c1Date);
-                }
-                if(circumstances.c2Date !== null)
-                {
-                    this.c2Date = new Date(circumstances.c2Date);
-                }
-                if(circumstances.midDate !== null)
-                {
-                    this.midDate = new Date(circumstances.midDate);
-                }
-                if(circumstances.c3Date !== null)
-                {
-                    this.c3Date = new Date(circumstances.c3Date);
-                }
-                if(circumstances.c4Date !== null)
-                {
-                    this.c4Date = new Date(circumstances.c4Date);
-                }
-            }
-        }
-    };
-    
-    this.set(circumstances);
 }
 
 
@@ -428,7 +348,7 @@ function TimeSpan(start_time, end_time)
             rawMilliSeconds = 0;
         }
         
-        days = Math.abs(rawMilliSeconds / (24 * 60 * 60 * 1000));
+        days = Math.abs(rawMilliSeconds / (86400000));
         
         if (days >= 1)
         {
@@ -638,8 +558,8 @@ function julianDayToTime(julianDay)
      * OK, well just convert everything to milliseconds and add 327 days, and poof it works!
      * Won't work for all years, but does seem to be happy up till 2100 at least.
      */
-    var julian_milliseconds = julianDay * 24 * 60 * 60 * 1000;
-    var julian_correction = 327 * 24 * 60 * 60 * 1000;
+    var julian_milliseconds = julianDay * 86400000;
+    var julian_correction = 28252800000;
     var utc_date = new Date(Date.UTC(-4713, 0, 1, 12, 0, 0, 0));
     var start_milliseconds = utc_date.getTime();
     
@@ -647,7 +567,6 @@ function julianDayToTime(julianDay)
     
     return utc_date;
 }
-;
 
 // Object containing mathematical constants for the observer.
 // latitude: required Number() north lat is positive in decimal degrees.
@@ -863,6 +782,30 @@ function Besselian()
 function EclipseData(/* Object */ eclipse)
 {
     var MAX_LENGTH_TIME_CENTRAL_ECLIPSE = 751000;       // Longest theortical annular eclipse length in milliseconds.
+    var LAT_RESOLUTION = 0.1;
+    var LONG_RESOLUTION = 0.1;
+    var LAT_PENSHADOW_RESOLUTION = 0.5;
+    var LONG_PENSHADOW_RESOLUTION = 3.0;
+    var LAT_UMBRA_SHADOW_RESOLUTION = 0.025;
+    var LONG_UMBRA_SHADOW_RESOLUTION = 0.05;
+    
+    /*
+     * Outputs variable longitude resolution based upon distance from equator.
+     * Closer to poles lower resolution for better detail.
+     * @param {type} lat
+     * @returns {Number}
+     */
+    function getLongResolution(lat)
+    {
+        var absLat = Math.abs(lat);
+        
+        if(absLat < 90)
+        {
+            return LONG_RESOLUTION * Math.cos(degToRad(absLat));
+        }
+        
+        return LONG_RESOLUTION * 0.00000001;
+    }
     
     // Helper functions:
     function radToDeg(angleRad)
@@ -984,8 +927,8 @@ function EclipseData(/* Object */ eclipse)
         
         return false;
     }
-
-   /*
+    
+    /*
     * Helper function for sorting by longitude from west to east
     */
     function sortWest(pos_a, pos_b)
@@ -1015,9 +958,70 @@ function EclipseData(/* Object */ eclipse)
     
         return -1;
     }
+    
+    /* Because of maping weirdness at poles, shadow lines must always be circular.
+     * This function will smooth at shadow at poles so as not cause aritificating when displaying on map.
+     * @param {Array} c1ShadowLine - Line Defining start of eclipse shadow.
+     * @param {Array} c4ShadowLine - Line deifning end of eclipse shadow.
+     * @returns {undefined}
+     */
+    function smoothAtPoles(c1ShadowLine, c4ShadowLine)
+    {
+        if(c1ShadowLine.length > 1 && c4ShadowLine.length > 1)
+        {
+            var lastShadowLong = c1ShadowLine[c1ShadowLine.length - 1].longitude;
+            var lastShadowLat = c1ShadowLine[c1ShadowLine.length - 1].latitude;
+            var firstC4ShadowLong = c4ShadowLine[c4ShadowLine.length - 1].longitude;
+            var firstC4ShadowLat = c4ShadowLine[c4ShadowLine.length - 1].latitude;
+
+            if(Math.abs(lastShadowLat) > 75 || Math.abs(firstC4ShadowLat) > 75)
+            {
+                if(degreesWest(lastShadowLong, firstC4ShadowLong) > 120)
+                {
+                    var avgDeltaLong = degreesWest(lastShadowLong, firstC4ShadowLong) / 5;
+                    var avgLong = incrementLong(lastShadowLong, -1 * avgDeltaLong);
+                    var avgLat = -89.99; // Assuming shadow goes over souther pole. // Probably not really correct.  TODO: Makes this right?
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+                    avgLong = incrementLong(lastShadowLong, -2 * avgDeltaLong);
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+                    avgLong = incrementLong(lastShadowLong, -3 * avgDeltaLong);
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+                    avgLong = incrementLong(lastShadowLong, -4 * avgDeltaLong);
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+               }
+            }
+            
+            /***  FOR SOME REASON IT's NOT NECESSARY TO DO THIS TO THE NORTHERN PART OF THE SHADOW
+             * TODO: Research why.
+             * 
+            var firstShadowLong = c1ShadowLine[0].longitude;
+            var firstShadowLat = c1ShadowLine[0].latitude;
+            var lastC4ShadowLong = c4ShadowLine[0].longitude;
+            var lastC4ShadowLat = c4ShadowLine[0].latitude;
+
+            if(Math.abs(firstShadowLat) > 75 || Math.abs(lastC4ShadowLat) > 75)
+            {
+                if(degreesWest(firstShadowLong, lastC4ShadowLong) > 120)
+                {
+                    console.log("Smoothing northern part of penumbra shadow.");
+                    var avgDeltaLong = degreesWest(firstShadowLong, lastC4ShadowLong) / 5;
+                    var avgLong = incrementLong(firstShadowLong, -1 * avgDeltaLong);
+                    var avgLat = (firstShadowLat + lastC4ShadowLat) / 2;
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+                    avgLong = incrementLong(firstShadowLong, -2 * avgDeltaLong);
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+                    avgLong = incrementLong(firstShadowLong, -3 * avgDeltaLong);
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+                    avgLong = incrementLong(firstShadowLong, -4 * avgDeltaLong);
+                    c1ShadowLine.push(new Position(avgLat, avgLong));
+               }
+            }            
+            ****/
+        }            
+    }
 
 
-    this.type = new String();
+    this.type = "";
     
     this.maxEclipseDate = new Date();
     
@@ -1032,7 +1036,6 @@ function EclipseData(/* Object */ eclipse)
     this.c3Circumstances = new EclipseCircumstances();
     this.c4Circumstances = new EclipseCircumstances();
     
-    // TODO: Performance/Memory issue?  Keeping these in memory will be costly, destroy function?
     this.northPenumbraLine = null;
     this.southPenumbraLine = null;
     this.centralLine = null;
@@ -1046,6 +1049,88 @@ function EclipseData(/* Object */ eclipse)
     this.northUmbraLineTimes = null;	// An array of times along the north umbra line.
     this.westPenumbraLineTimes = null;	// An array of times along the west penumbra limit line.
     this.eastPenumbraLineTimes = null;	// An array of times along the east penumbra limit line.
+    
+    /*
+     * Converts Julian Day to Date object.
+     * Returns null if invalid or fail
+     * @param {Number} jDay
+     * @returns {Date | Null}
+     */ 
+    this.toDate = function(jDay)
+    {
+        if(jDay)
+        {
+            var julianDay = Math.floor(jDay);
+            var time_diff = (jDay - julianDay) * 24; // Decimal hours.
+            var year = Math.floor((julianDay - 122.1) / 365.25);
+            var day = Math.floor(365.25 * year);
+            var month = Math.floor((julianDay - day) / 30.6001);
+            day = julianDay - day - Math.floor(30.6001 * month);
+            if (month < 13.5) 
+            {
+                month = month - 1;
+            } else 
+            {
+                month = month - 13;
+            }
+            if (month > 2.5) 
+            {
+                year -= 4716;
+            }	 
+            else 
+            {
+                year -= 4715;
+            }
+
+            month--;	// For Javascript Date object.
+
+            var hours = Math.floor(time_diff);
+
+            var minutes = (time_diff * 60.0) - 60.0 * hours;
+
+            var seconds = (minutes * 60.0) - 60.0 * Math.floor(minutes);
+
+            var milliseconds = Math.round((seconds - Math.floor(seconds)) * 1000);
+
+            minutes = Math.floor(minutes);
+            seconds = Math.floor(seconds);
+
+            var ret_date = new Date(Date.UTC(year, month, day, hours, minutes, seconds, milliseconds));
+
+            return ret_date;
+        }
+        
+        return null;
+    };
+    
+    /*
+     * Memory performance enchancement?  FIXME: Westline is being copied to eastline somewhere?
+     * So as eclipse are calculated and changed we don't store the line data in memory.
+     * @returns {undefined}
+     */
+    this.destroy = function()
+    {
+        this.observerConstants = null;
+        this.c1Circumstances = new EclipseCircumstances();
+        this.c2Circumstances = new EclipseCircumstances();
+        this.midCircumstances = new EclipseCircumstances();
+        this.c3Circumstances = new EclipseCircumstances();
+        this.c4Circumstances = new EclipseCircumstances();
+
+        this.northPenumbraLine = null;
+        this.southPenumbraLine = null;
+        this.centralLine = null;
+        this.southUmbraLine = null;
+        this.northUmbraLine = null;
+        this.westLimitLine = null;
+        this.eastLimitLine = null;
+
+        this.centralLineTimes = null;		
+        this.southUmbraLineTimes = null; 	
+        this.northUmbraLineTimes = null;	
+        this.westPenumbraLineTimes = null;	
+        this.eastPenumbraLineTimes = null;
+    };
     
     /*
      * Deep copies line times, so we can work with JSON objects.
@@ -1125,7 +1210,6 @@ function EclipseData(/* Object */ eclipse)
     {
         if (typeof(latitude) === "number" && typeof(longitude) === "number")
         {
-           
             var elevation = 0;
             var calc_longitude = longitude;
             var observerCircumstances = new ObserverCircumstances();
@@ -1144,7 +1228,7 @@ function EclipseData(/* Object */ eclipse)
 
             // These items are still used even when outside circumstances
             // How far and to which side are we outside the circumstances?
-            observerCircumstances.magnitude = Number(100 * this.midCircumstances.magnitude);
+            observerCircumstances.magnitude = 100 * this.midCircumstances.magnitude;
 
             observerCircumstances.northOfCenter = (this.midCircumstances.vLoc < 0.0);
             observerCircumstances.midAltitude = this.getAlt(this.midCircumstances);
@@ -1170,7 +1254,7 @@ function EclipseData(/* Object */ eclipse)
 
                     if (observerCircumstances.circDates.getC1Date() !== null && observerCircumstances.circDates.getC4Date() !== null)
                     {
-                        observerCircumstances.c1c4TimeSpan.setSpan(observerCircumstances.circDates.getC1Date(), observerCircumstances.circDates.getC4Date());
+                        observerCircumstances.c1c4TimeSpan.setSpan(this.toDate(observerCircumstances.circDates.getC1Date()), this.toDate(observerCircumstances.circDates.getC4Date()));
                     }
 
                     switch (this.midCircumstances.localType)
@@ -1183,7 +1267,7 @@ function EclipseData(/* Object */ eclipse)
                             observerCircumstances.eclipseType = "Annular";
                             if (observerCircumstances.circDates.getC2Date() !== null && observerCircumstances.circDates.getC3Date() !== null)
                             {
-                                observerCircumstances.c2c3TimeSpan.setSpan(observerCircumstances.circDates.getC2Date(), observerCircumstances.circDates.getC3Date());
+                                observerCircumstances.c2c3TimeSpan.setSpan(this.toDate(observerCircumstances.circDates.getC2Date()), this.toDate(observerCircumstances.circDates.getC3Date()));
                             }
                             break;
 
@@ -1191,7 +1275,7 @@ function EclipseData(/* Object */ eclipse)
                             observerCircumstances.eclipseType = "Total";
                             if (observerCircumstances.circDates.getC2Date() !== null && observerCircumstances.circDates.getC3Date() !== null)
                             {
-                                observerCircumstances.c2c3TimeSpan.setSpan(observerCircumstances.circDates.getC2Date(), observerCircumstances.circDates.getC3Date());
+                                observerCircumstances.c2c3TimeSpan.setSpan(this.toDate(observerCircumstances.circDates.getC2Date()), this.toDate(observerCircumstances.circDates.getC3Date()));
                             }
                             break;
 
@@ -1332,6 +1416,26 @@ function EclipseData(/* Object */ eclipse)
         return false;
     };
     
+    this.getCentralLine = function()
+    {
+        return this.centralLine;
+    };
+    
+    this.setCentralLine = function(line)
+    {
+        this.centralLine = line;
+    };
+    
+    this.setCentralLineTimes = function(times)
+    {
+        this.centralLineTimes = this.deepCopyLineTimes(times);
+    };
+    
+    this.getCentralLineTimes = function()
+    {
+        return this.centralLineTimes;
+    };
+    
     // Draws central line of eclipse.
     // Produces an array of Position Objects to define central line.
     // Eclipse must be either a Total or Annular
@@ -1350,8 +1454,8 @@ function EclipseData(/* Object */ eclipse)
             
             this.centralLine.push(this.midEclipsePoint);
             
-            var longitudeOffset = 0.5;
-            var latitudeOffset = 0.5;
+            var longitudeOffset = getLongResolution(this.midEclipsePoint.latitude);
+            var latitudeOffset = LAT_RESOLUTION;
             var currentLongitude = 0.0;
             var currentLatitude = 0.0;
             var lastDepth = 0.0;
@@ -1367,16 +1471,18 @@ function EclipseData(/* Object */ eclipse)
             {
                 bBreakSearch = false;
                 
-                longitudeOffset = Math.abs(longitudeOffset) * east;
+                longitudeOffset = getLongResolution(currentLatitude) * east;
                 
                 for (var currentLongOffset = longitudeOffset;
                         Math.abs(currentLongOffset) <= 180.0;
                         currentLongOffset += longitudeOffset)
                 {
+                    longitudeOffset = getLongResolution(currentLatitude) * east;
+                    
                     currentLongitude = incrementLong(this.midEclipsePoint.longitude, currentLongOffset);
                     
                     // First test.
-                    if (currentLongOffset == longitudeOffset)
+                    if (currentLongOffset === longitudeOffset)
                     {
                         currentLatitude = this.midEclipsePoint.latitude;
                     }
@@ -1384,7 +1490,7 @@ function EclipseData(/* Object */ eclipse)
                     currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
                     lastDepth = currentCircumstances.depth;
                     
-                    if (this.checkCentralHorizons(currentCircumstances, (east == 1)) || bBreakSearch)
+                    if (this.checkCentralHorizons(currentCircumstances, (east === 1)) || bBreakSearch)
                     {
                         break;
                     }
@@ -1413,7 +1519,7 @@ function EclipseData(/* Object */ eclipse)
                             }
                             if (currentCircumstances.depth < 99.9)	// Not on or close to center line.
                             {
-                                if ((currentCircumstances.northOfCenter && north === 1) || (!currentCircumstances.northOfCenter && north == -1))	// Went past central line!
+                                if ((currentCircumstances.northOfCenter && north === 1) || (!currentCircumstances.northOfCenter && north === -1))	// Went past central line!
                                 {
                                     currentLatitude -= latitudeOffset * ((100 - currentCircumstances.depth) / ((100 - lastDepth) + (100 - currentCircumstances.depth)));
                                     currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0); // Get again for line times.
@@ -1471,10 +1577,9 @@ function EclipseData(/* Object */ eclipse)
         return this.centralLine;
     };
     
-    // Returns date object with penumbra start time (on Earth).
-    // Returns null if penumbra limit lines not yet drawn!
-    // TODO:  Does not work yet!
-    this.getPenumbraStartTime = function()
+    // Returns Julian Day with penumbra start time (on Earth).
+    // Returns null if penumbra limit lines not yet drawn!    
+    this.getPenumbraStartTimeJD = function()
     {
         var penUmbraStartTime = null;
         
@@ -1484,25 +1589,34 @@ function EclipseData(/* Object */ eclipse)
             lineTimes = lineTimes.concat(this.westPenumbraLineTimes);
             lineTimes = lineTimes.sort(function(time_a, time_b)
             {
-                if(time_a.getMidDate() != null && time_b.getMidDate() != null)
+                if(time_a.getMidDate() !== null && time_b.getMidDate() !== null)
                 {
-                     return(time_a.getMidDate().getTime() - time_b.getMidDate().getTime());
+                     return(time_a.getMidDate() - time_b.getMidDate());
                 }
                 return 0;
             });
             
-            penUmbraStartTime = new Date(lineTimes[0].getMidDate());
+            penUmbraStartTime = lineTimes[0].getMidDate();
            
-            penUmbraStartTime.setUTCMinutes(penUmbraStartTime.getUTCMinutes() - 45);	// TODO: Not using correct line times for end of eclipse, this will get us close enough for now.
+            penUmbraStartTime -= 0.03;	// TODO: Not using correct line times for end of eclipse, this will get us close enough for now.
         }
         
         return penUmbraStartTime;	
     };
     
-    // Returns date object with penumbra end time (on Earth).
+    /* Returns javaScript Date object 
+     * of penumbra start time
+     * @returns {Date}
+     */
+    this.getPenumbraStartTime = function()
+    {
+        return this.toDate(this.getPenumbraStartTimeJD());
+    };
+    
+    // Returns Julian Day with penumbra end time (on Earth).
     // Returns null if penumbra limit lines not yet drawn!
     // TODO:  Does not work yet!
-    this.getPenumbraEndTime = function()
+    this.getPenumbraEndTimeJD = function()
     {
         var penUmbraEndTime = null;
         
@@ -1512,81 +1626,148 @@ function EclipseData(/* Object */ eclipse)
             lineTimes = lineTimes.concat(this.eastPenumbraLineTimes);
             lineTimes = lineTimes.sort(function(time_a, time_b)
             {
-                if(time_b.getMidDate() != null && time_a.getMidDate() != null )
+                if(time_b.getMidDate() !== null && time_a.getMidDate() !== null )
                 {
-                    return(time_b.getMidDate().getTime() - time_a.getMidDate().getTime());
+                    return(time_b.getMidDate() - time_a.getMidDate());
                 }
                 return 0;
             });
             
-            penUmbraEndTime = new Date(lineTimes[0].getMidDate());
+            penUmbraEndTime = lineTimes[0].getMidDate();
                         
-            penUmbraEndTime.setUTCMinutes(penUmbraEndTime.getUTCMinutes() + 45);	// TODO: Not using correct line times for end of eclipse, this will get us close enough for now.
+            penUmbraEndTime += 0.03;	// TODO: Not using correct line times for end of eclipse, this will get us close enough for now.
         }
         
         return penUmbraEndTime;	
     };
     
+    /* Return javaScript Date object
+     * of penumbra end time on Earth
+     * @returns {Date}
+     */
+    this.getPenumbraEndTime = function ()
+    {
+        return this.toDate(this.getPenumbraEndTimeJD());
+    };
+    
     // Returns date object with umbra start time (on Earth).
     // Returns null if no umbra, or umbra lines not yet drawn!
-    this.getUmbraStartTime = function()
+    this.getUmbraStartTimeJD = function()
     {
         var umbraStartTime = null;
         
         if (this.centralLineTimes)
         {
-            umbraStartTime = new Date(this.centralLineTimes[0].getC2Date());
+            umbraStartTime = this.centralLineTimes[0].getC2Date();
         }
         else
         {
             if (this.northUmbraLineTimes)
             {
-                umbraStartTime = new Date(this.northUmbraLineTimes[0].getMidDate());
+                umbraStartTime = this.northUmbraLineTimes[0].getMidDate();
             }
             
             if (this.southUmbraLineTimes)
             {
-                umbraStartTime = new Date(this.southUmbraLineTimes[0].getMidDate());
+                umbraStartTime = this.southUmbraLineTimes[0].getMidDate();
             }
         }
         
         if (umbraStartTime)
         {
-            umbraStartTime.setMinutes(umbraStartTime.getMinutes() - 1); // Doing this for rounding issues?  TODO: Fix for accuracy.
+            umbraStartTime -= 0.001; // Doing this for rounding issues?  TODO: Fix for accuracy.
         }
         
         return umbraStartTime;
     };
     
+    /* Returns javaScript Date object
+     * of Umbra start time on Earth.
+     * @returns {Date}
+     */
+    this.getUmbraStartTime = function()
+    {
+        return this.toDate(this.getUmbraStartTimeJD());        
+    };
+    
     // Returns date object with umbra end time.
     // Returns null if no umbra, or umbra lines not yet drawn!
-    this.getUmbraEndTime = function()
+    this.getUmbraEndTimeJD = function()
     {
         var umbraEndTime = null;
         
         if (this.centralLineTimes)
         {
-            umbraEndTime = new Date(this.centralLineTimes[this.centralLineTimes.length - 1].getC3Date());	
+            umbraEndTime = this.centralLineTimes[this.centralLineTimes.length - 1].getC3Date();	
         }
         else
         {
             if (this.northUmbraLineTimes)
             {
-                umbraEndTime = new Date(this.northUmbraLineTimes[this.northUmbraLineTimes.length - 1].getMidDate());
+                umbraEndTime = this.northUmbraLineTimes[this.northUmbraLineTimes.length - 1].getMidDate();
             }
             
             if (this.southUmbraLineTimes)
             {
-                umbraEndTime = new Date(this.southUmbraLineTimes[this.northUmbraLineTimes.length - 1].getMidDate());
+                umbraEndTime = this.southUmbraLineTimes[this.northUmbraLineTimes.length - 1].getMidDate();
             }	
         }
         
         if (umbraEndTime)
         {
-            umbraEndTime.setMinutes(umbraEndTime.getMinutes() + 1);	// Doing this for rounding issues?  TODO: Fix for accuracy.
+            umbraEndTime += 0.001;	// Doing this for rounding issues?  TODO: Fix for accuracy.
         }
         
         return umbraEndTime;
+    };
+    
+    /* Return javaScript Date object
+     * of umbra end time on Earth.
+     * @returns {Date}
+     */
+    this.getUmbraEndTime = function()
+    {
+        return this.toDate(this.getUmbraEndTimeJD());
+    };
+    
+    this.setSouthUmbraLine = function(line)
+    {
+        this.southUmbraLine = line;
+    };
+    
+    this.getSouthUmbraLine = function()
+    {
+        return this.southUmbraLine;
+    };
+    
+    this.setNorthUmbraLine = function(line)
+    {
+        this.northUmbraLine = line;
+    };
+    
+    this.getNorthUmbraLine = function()
+    {
+        return this.northUmbraLine;
+    };
+    
+    this.getNorthUmbraTimes = function()
+    {
+        return this.northUmbraLineTimes;        
+    };
+    
+    this.setNorthUmbraTimes = function(times)
+    {
+        this.northUmbraLineTimes =  this.deepCopyLineTimes(times);       
+    };
+    
+    this.getSouthUmbraTimes = function()
+    {
+        return this.southUmbraLineTimes;
+    };
+     
+    this.setSouthUmbraTimes = function(times)
+    {
+        this.southUmbraLineTimes =  this.deepCopyLineTimes(times);
     };
     
     // Draws southern limit of (ant)umbral line of eclipse.
@@ -1614,8 +1795,8 @@ function EclipseData(/* Object */ eclipse)
             umbraLimit = [];
             lineTimes = [];
             
-            var longitudeOffset = 0.5;
-            var latitudeOffset = 0.5;
+            var longitudeOffset = getLongResolution(this.midEclipsePoint.latitude);
+            var latitudeOffset = LAT_RESOLUTION;
             var currentLongitude = this.midEclipsePoint.longitude;
             var currentLatitude = this.midEclipsePoint.latitude;
             var lastDepth = 100.0;	// Last depth was the midpoint, a known value of 100.0
@@ -1633,7 +1814,7 @@ function EclipseData(/* Object */ eclipse)
             {
                 currentCircumstances = new ObserverCircumstances();
                 lastDepth = 100.0;
-                longitudeOffset = Math.abs(longitudeOffset) * east;
+                longitudeOffset = getLongResolution(currentLatitude) * east;
                 currentLongitude = this.midEclipsePoint.longitude;
                 currentLatitude = this.midEclipsePoint.latitude;
                 bBreakSearch = false;
@@ -1642,6 +1823,8 @@ function EclipseData(/* Object */ eclipse)
                         Math.abs(currentLongOffset) <= 180.0;
                         currentLongOffset += longitudeOffset)
                 {
+                    longitudeOffset = getLongResolution(currentLatitude) * east;
+                    
                     if (east === -1)	// if going the other way, skip over one, since we already have the midpoint.
                     {
                         currentLongOffset += longitudeOffset;
@@ -1771,6 +1954,26 @@ function EclipseData(/* Object */ eclipse)
         return this.northUmbraLine;
     };
     
+    this.getNorthPenumbraLine = function()
+    {
+        return this.northPenumbraLine;
+    };
+    
+    this.getSouthPenumbraLine = function()
+    {
+        return this.southPenumbraLine;
+    };
+    
+    this.setNorthPenumbraLine = function(line)
+    {
+        this.northPenumbraLine = line;
+    };
+    
+    this.setSouthPenumbraLine = function(line)
+    {
+        this.southPenumbraLine = line;
+    };
+    
     // Draws the penumbral limits of the eclipse
     // Set bNorth to false, to get southern limits
     // Set bNorth to true to to get northern limits.
@@ -1789,8 +1992,8 @@ function EclipseData(/* Object */ eclipse)
         
         var penUmbrallLimit = [];
         
-        var longitudeOffset = 0.5;
-        var latitudeOffset = 0.5;
+        var longitudeOffset = getLongResolution(this.midEclipsePoint.latitude);
+        var latitudeOffset = LAT_RESOLUTION;
         var currentLongitude = this.midEclipsePoint.longitude;
         var currentLatitude = this.midEclipsePoint.latitude;
         var lastMagnitude = 100.0;
@@ -1806,7 +2009,7 @@ function EclipseData(/* Object */ eclipse)
         {
             bBreakSearch = false;
             
-            longitudeOffset = Math.abs(longitudeOffset) * east;
+            longitudeOffset = getLongResolution(currentLatitude) * east;
             
             if (!bNorth)	// Initial search, false go south, true: go north.
             {
@@ -1816,7 +2019,7 @@ function EclipseData(/* Object */ eclipse)
             
             if (east === 1)	// First search, big jump north or south to find first limit point.
             {
-                latitudeOffset = 2.0 * north;	// Bigger jump, will set down later for normal search.
+                latitudeOffset = 2.0 * LAT_RESOLUTION * north;	// Bigger jump, will set down later for normal search.
                 // Search North or South
                 for (currentLatitude += latitudeOffset;
                         Math.abs(currentLatitude) <= 90.0;
@@ -1847,7 +2050,7 @@ function EclipseData(/* Object */ eclipse)
                 currentLongitude = penUmbrallLimit[0].longitude;
             }
             
-            latitudeOffset = 0.5 * north;	// Back to normal search offset.
+            latitudeOffset = LAT_RESOLUTION * north;	// Back to normal search offset.
             
             for (var currentLongOffset = longitudeOffset;
                     Math.abs(currentLongOffset) <= 180.0;
@@ -1888,6 +2091,7 @@ function EclipseData(/* Object */ eclipse)
                         Math.abs(currentLatitude) <= 90.0;
                         currentLatitude += latitudeOffset)
                 {
+                                      
                     currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
                     if (this.checkPartialHorizons(currentCircumstances, (east === 1)))
                     {
@@ -1912,6 +2116,8 @@ function EclipseData(/* Object */ eclipse)
                     
                     lastMagnitude = currentCircumstances.magnitude;
                 }
+                
+                longitudeOffset = getLongResolution(currentLatitude) * east;
                 
                 if (initialLimitNotFound)	// Limit at the poles, add a polar limit???
                 {
@@ -1943,6 +2149,70 @@ function EclipseData(/* Object */ eclipse)
         return this.southPenumbraLine;
     };
     
+    this.getWestLimitLine = function()
+    {
+        return this.westLimitLine;
+    };
+    
+    this.getEastLimitLine = function()
+    {
+        return this.eastLimitLine;
+    };
+    
+    this.setWestLimitLine = function(line)
+    {
+        this.westLimitLine = line;
+    };
+    
+    this.setEastLimitLine = function(line)
+    {
+       this.eastLimitLine = line;  
+    };
+    
+    this.getWestLineTimes = function()
+    {
+        return this.westPenumbraLineTimes;
+    };
+    
+    /* Input javaScript Date object to see if this eclipse
+     * is occuring somewhere on Earth.
+     * @param {Date} date -- Date and time to test if eclipse is occurring.
+     * @returns {Boolean}
+     */
+    this.isEclipseOccurring = function(date)
+    {
+        try
+        {
+            if(date && this.getPenumbraEndTime() && this.getPenumbraStartTime())
+            {
+                if(date <= this.getPenumbraEndTime() && date >= this.getPenumbraStartTime())
+                {
+                    return true;
+                }
+            }
+        }
+        catch(error)
+        {
+            return false;
+        }
+        return false;
+    };
+    
+    this.setWestLineTimes = function(times)
+    {
+        this.westPenumbraLineTimes =  this.deepCopyLineTimes(times);
+    };
+    
+    this.getEastLineTimes = function()
+    {
+        return this.eastPenumbraLineTimes;
+    };
+    
+    this.setEastLineTimes = function(times)
+    {
+        this.eastPenumbraLineTimes = this.deepCopyLineTimes(times);
+    };
+    
     // Draws east / west limits of eclipse
     // Penumbral limits must be drawn first!
     // if (bWest = true), westerly limit is drawn, else, easterly limit.
@@ -1960,12 +2230,12 @@ function EclipseData(/* Object */ eclipse)
         
         if (!this.southPenumbraLine && !this.northPenumbraLine)
         {
-            console.log("Can't draw east or west limit line without the north and south penumbral limits.");
+            throw "Can't draw east or west limit line without the north and south penumbral limits.";
             return null;
         }
         
-        var latOffset = 0.5;
-        var longOffset = 0.5;
+        var latOffset = LAT_RESOLUTION;
+        var longOffset = getLongResolution(0);
         
         var limitLine = [];
         var bNorth = true; // Start search from south to north.
@@ -1987,47 +2257,74 @@ function EclipseData(/* Object */ eclipse)
         
         if (!this.southPenumbraLine && this.northPenumbraLine)
         {
-            bNorth = false;
-            latLimit = -90.0;
+            if(this.northPenumbraLine.length > 0)
+            {
+                bNorth = false;
+                latLimit = -89.0;
             
-            if (!bWest)
-            {
-                limitLine.push(this.northPenumbraLine[this.northPenumbraLine.length - 1]);	// Start with the end of penumbra limit.
-                currentCircumstances = this.calculateLocalCircumstances(this.northPenumbraLine[this.northPenumbraLine.length - 1].latitude, this.northPenumbraLine[this.northPenumbraLine.length - 1].longitude, 0.0);
-                lineTimes.push(currentCircumstances.circDates);
-            }
-            else
-            {
-                limitLine.push(this.northPenumbraLine[0]);
-                currentCircumstances = this.calculateLocalCircumstances(this.northPenumbraLine[0].latitude, this.northPenumbraLine[0].longitude, 0.0);
-                lineTimes.push(currentCircumstances.circDates);
+                if (!bWest)
+                {
+                    limitLine.push(this.northPenumbraLine[this.northPenumbraLine.length - 1]);	// Start with the end of penumbra limit.
+                    currentCircumstances = this.calculateLocalCircumstances(this.northPenumbraLine[this.northPenumbraLine.length - 1].latitude, this.northPenumbraLine[this.northPenumbraLine.length - 1].longitude, 0.0);
+                    lineTimes.push(currentCircumstances.circDates);
+                }
+                else
+                {
+                    limitLine.push(this.northPenumbraLine[0]);
+                    currentCircumstances = this.calculateLocalCircumstances(this.northPenumbraLine[0].latitude, this.northPenumbraLine[0].longitude, 0.0);
+                    lineTimes.push(currentCircumstances.circDates);
+                }
             }
         }
         else
         {
-            if (!bWest)
+            if(this.southPenumbraLine.length > 0)
             {
-                limitLine.push(this.southPenumbraLine[this.southPenumbraLine.length - 1]);	// Start with the end of penumbra limit.
-                currentCircumstances = this.calculateLocalCircumstances(this.southPenumbraLine[this.southPenumbraLine.length - 1].latitude, this.southPenumbraLine[this.southPenumbraLine.length - 1].longitude, 0.0);
-                lineTimes.push(currentCircumstances.circDates);
-            }
-            else
-            {
-                limitLine.push(this.southPenumbraLine[0]);
-                currentCircumstances = this.calculateLocalCircumstances(this.southPenumbraLine[0].latitude, this.southPenumbraLine[0].longitude, 0.0);
-                lineTimes.push(currentCircumstances.circDates);
+                if (!bWest)
+                {
+                    limitLine.push(this.southPenumbraLine[this.southPenumbraLine.length - 1]);	// Start with the end of penumbra limit.
+                    try
+                    {
+                        currentCircumstances = this.calculateLocalCircumstances(this.southPenumbraLine[this.southPenumbraLine.length - 1].latitude, this.southPenumbraLine[this.southPenumbraLine.length - 1].longitude, 0.0);
+                        lineTimes.push(currentCircumstances.circDates);
+                    }
+                    catch(error)
+                    {
+                        throw "Ummmm no number here!";
+                    }
+                }
+                else
+                {
+                    limitLine.push(this.southPenumbraLine[0]);
+                    currentCircumstances = this.calculateLocalCircumstances(this.southPenumbraLine[0].latitude, this.southPenumbraLine[0].longitude, 0.0);
+                    lineTimes.push(currentCircumstances.circDates);
+                }
             }
         }
         
         if (bWest)
         {
             eastLongLimit = this.midEclipsePoint.longitude;
-            westLongLimit = incrementLong(limitLine[0].longitude, 90.0);
+            if(limitLine.length > 0)
+            {
+                westLongLimit = incrementLong(limitLine[0].longitude, -90.0);
+            }
+            else
+            {
+                westLongLimit = incrementLong(this.midEclipsePoint.longitude, -90.0);
+            }
         }
         else
         {
             westLongLimit = this.midEclipsePoint.longitude;
-            eastLongLimit = incrementLong(limitLine[0].longitude, 90.0);
+            if(limitLine.length > 0)
+            {
+                eastLongLimit = incrementLong(limitLine[0].longitude, 90.0);
+            }
+            else
+            {
+                eastLongLimit = incrementLong(this.midEclipsePoint.longitude, 90.0);
+            }
         }
         
         /**** This should be taken care of with long limits?
@@ -2072,7 +2369,7 @@ function EclipseData(/* Object */ eclipse)
                 }
                 else
                 {
-                    latLimit = -90.0;
+                    latLimit = -89.0;
                 }
             }
         }
@@ -2082,15 +2379,43 @@ function EclipseData(/* Object */ eclipse)
             latOffset *= -1.0;
         }
         
-        currentLatitude = limitLine[0].latitude;
-        currentLongitude = limitLine[0].longitude;
+        if(limitLine.length > 0)    // TODO: Investigate: There's a rare circumstance where there will be no north or south limit line, I'm not sure why.
+        {
+            currentLatitude = limitLine[0].latitude;
+            currentLongitude = limitLine[0].longitude;
+        }
+        else
+        {
+            currentLatitude = 0.0;
+            if(bWest)
+            {                    
+                currentLongitude = incrementLong(this.midEclipsePoint.longitude, 90);
+            }
+            else
+            {
+                currentLongitude = incrementLong(this.midEclipsePoint.longitude, -90);
+            }
+        }
         maxLatOffset = Math.abs(latLimit - currentLatitude);
         
-        for (totalLatOffset += (latOffset * 2);
+        var startLat = 0;
+        
+        if(limitLine.length > 0)
+        {
+            startLat = limitLine[0].latitude;
+        }
+        else
+        {
+            startLat =  currentLatitude;           
+        }
+                
+        for (totalLatOffset += latOffset;
              Math.abs(totalLatOffset) < maxLatOffset;
              totalLatOffset += latOffset)
         {
-            currentLatitude = limitLine[0].latitude + totalLatOffset;
+            currentLatitude = startLat + totalLatOffset;
+            longOffset = getLongResolution(currentLatitude);
+            
             currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
             
             if (bWest)
@@ -2136,6 +2461,7 @@ function EclipseData(/* Object */ eclipse)
                     totalLongOffset += longOffset
                     )
             {
+                
                 currentLongitude = incrementLong(lastLongitude, totalLongOffset);
                 
                 currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
@@ -2148,11 +2474,7 @@ function EclipseData(/* Object */ eclipse)
                 {
                     currentAlt = currentCircumstances.c1Altitude;
                 }
-                if(isNaN(currentAlt))   // If this fails, mid will be close enough
-                {
-                    currentAlt = currentCircumstances.midAltitude;
-                }
-                
+                                
                 if(isNaN(currentAlt))   // If it is still bad, get out!
                 {
                     break;
@@ -2173,11 +2495,8 @@ function EclipseData(/* Object */ eclipse)
                     lastAlt = currentAlt;
                     // Continue searching.
                 }
-            }
-            if (Math.abs(totalLongOffset) >= Math.abs(maxLongOffset))	// Searched as far east or west as we should go, so get it out.
-            {
-                break;
-            }
+                
+            }            
         }
              
        if(!bNorth)   // Join up with other penumbra line. TODO: DOESNT WORK YET????
@@ -2223,8 +2542,21 @@ function EclipseData(/* Object */ eclipse)
             }
         }
         
+        if(limitLine) // To make sure east/west limit lines always go from south to north.
+        {
+            if(limitLine.length > 1)
+            {
+                if(limitLine[0].latitude > limitLine[limitLine.length - 1].latitude)
+                {
+                    limitLine = limitLine.reverse();
+                    lineTimes = lineTimes.reverse();
+                }
+            }
+        }
+        
         if (bWest)
         {
+            console.log("WEST COMPLETE");
             this.westLimitLine = [];
             this.westLimitLine = this.westLimitLine.concat(limitLine);
             this.westPenumbraLineTimes = [];
@@ -2325,7 +2657,7 @@ function EclipseData(/* Object */ eclipse)
             northLimit += 1.0;
             if (northLimit > 90.0)
             {
-                northLimit = 90.0;
+                northLimit = 89.0;
             }
             limits.setNorthLimit(northLimit);
             
@@ -2392,7 +2724,7 @@ function EclipseData(/* Object */ eclipse)
             southLimit -= 1.0;
             if (southLimit < -90.0)
             {
-                southLimit = -90.0;
+                southLimit = -89.0;
             }
             limits.setSouthLimit(southLimit);
             
@@ -2436,7 +2768,7 @@ function EclipseData(/* Object */ eclipse)
      * Input date object required.
      * Returns null upon failure, invalid date, etc.
      */
-    this.getUmbraLimits = function(/* Date */ time)
+    this.getUmbraLimits = function(/* Number */ julianDay)
     {
         var limits = null;
         
@@ -2460,7 +2792,7 @@ function EclipseData(/* Object */ eclipse)
                     lineTime = this.centralLineTimes[i].getMidDate();
                     if (lineTime)
                     {
-                        if (lineTime >= time.getTime())
+                        if (lineTime >= julianDay)
                         {
                             eclipseStats = this.calculateLocalCircumstances(this.centralLine[i].latitude, this.centralLine[i].longitude, 0.0);
                             centralTimeSpan = eclipseStats.c2c3TimeSpan.getRawMilliSeconds();
@@ -2470,26 +2802,25 @@ function EclipseData(/* Object */ eclipse)
                 }
                 
                 // If unable to retrieve time for requested coordinate, use max time.
-                if(centralTimeSpan == 0)
+                if(centralTimeSpan === 0)
                 {
-                    this.midEclipsePoint.latitude
                     eclipseStats = this.calculateLocalCircumstances(this.midEclipsePoint.latitude, this.midEclipsePoint.longitude, 0.0);
                     centralTimeSpan = eclipseStats.c2c3TimeSpan.getRawMilliSeconds();
                 }
             }
             
             // If still unable, use theoretical maximum length of an annular eclipse.
-            if (centralTimeSpan == 0)
+            if (centralTimeSpan === 0)
             {
                 centralTimeSpan = MAX_LENGTH_TIME_CENTRAL_ECLIPSE;
             }
                 
-            var firstSearchTime = time.getTime() - Math.round((centralTimeSpan / 2));
-            var lastSearchTime = time.getTime() + Math.round((centralTimeSpan / 2));
+            var firstSearchTime = julianDay - ((centralTimeSpan / 2) / 86400000); // Converting timespan into fraction of day.
+            var lastSearchTime = julianDay + ((centralTimeSpan / 2) / 86400000);
             
             if (this.northUmbraLineTimes)
             {
-                var northLimit = -90.0;
+                var northLimit = -89.0;
                 
                 for (var i = 0; i < this.northUmbraLineTimes.length; i++)
                 {
@@ -2498,10 +2829,10 @@ function EclipseData(/* Object */ eclipse)
                     if (lineTime)
                     {
                         // Look back half max annular time before mid eclipse at limit line.
-                        if ((lineTime.getTime() >= firstSearchTime) && !bFirstTimeFound)
+                        if ((lineTime >= firstSearchTime) && !bFirstTimeFound)
                         {
                            bFirstTimeFound = true; 
-                            if (eastLimit == null)
+                            if (eastLimit === null)
                             {
                                 eastLimit = this.northUmbraLine[i].longitude;
                             }
@@ -2515,7 +2846,7 @@ function EclipseData(/* Object */ eclipse)
                             }
                             if (i > 0)
                             {
-                                if (westLimit == null)
+                                if (westLimit === null)
                                 {
                                     westLimit = this.northUmbraLine[i - 1].longitude;
                                 }
@@ -2532,9 +2863,9 @@ function EclipseData(/* Object */ eclipse)
                             continue;
                         }
                         // Look forward half max annular time before mid eclipse at limit line.
-                        if (lineTime.getTime() >= lastSearchTime)
+                        if (lineTime >= lastSearchTime)
                         {
-                            if (eastLimit == null)
+                            if (eastLimit === null)
                             {
                                 eastLimit = this.northUmbraLine[i].longitude;
                             }
@@ -2548,7 +2879,7 @@ function EclipseData(/* Object */ eclipse)
                             }
                             if (i > 0)
                             {
-                                if (westLimit == null)
+                                if (westLimit === null)
                                 {
                                     westLimit = this.northUmbraLine[i - 1].longitude;
                                 }
@@ -2573,7 +2904,7 @@ function EclipseData(/* Object */ eclipse)
                     i--;
                     if(i > 0)
                     {
-                        if (eastLimit == null)
+                        if (eastLimit === null)
                         {
                             eastLimit = this.northUmbraLine[i].longitude;
                         }
@@ -2587,7 +2918,7 @@ function EclipseData(/* Object */ eclipse)
                         }
                         if (i > 0)
                         {
-                            if (westLimit == null)
+                            if (westLimit === null)
                             {
                                 westLimit = this.northUmbraLine[i - 1].longitude;
                             }
@@ -2604,7 +2935,7 @@ function EclipseData(/* Object */ eclipse)
                 }
 
                 
-                if (northLimit == -90.0)	// Invalid time used.
+                if (northLimit === -89.0)	// Invalid time used.
                 {
                     return null;
                 }
@@ -2615,12 +2946,12 @@ function EclipseData(/* Object */ eclipse)
             }
             else
             {
-                limits.setNorthLimit(90.0);
+                limits.setNorthLimit(89.0);
             }
             
             if (this.southUmbraLineTimes)
             {
-                var southLimit = 90.0;
+                var southLimit = 89.0;
                 bFirstTimeFound = false;
                 bLastTimeFound = false;
                 
@@ -2631,10 +2962,10 @@ function EclipseData(/* Object */ eclipse)
                     if (lineTime)
                     {
                         // Look back half max annular time before mid eclipse at limit line.
-                        if ((lineTime.getTime() >= firstSearchTime) && !bFirstTimeFound)
+                        if ((lineTime >= firstSearchTime) && !bFirstTimeFound)
                         {
                             bFirstTimeFound = true;
-                            if (eastLimit == null)
+                            if (eastLimit === null)
                             {
                                 eastLimit = this.southUmbraLine[i].longitude;
                             }
@@ -2651,7 +2982,7 @@ function EclipseData(/* Object */ eclipse)
                             }
                             if (i > 0)
                             {
-                                if (westLimit == null)
+                                if (westLimit === null)
                                 {
                                     westLimit = this.southUmbraLine[i - 1].longitude;
                                 }
@@ -2672,10 +3003,10 @@ function EclipseData(/* Object */ eclipse)
                             continue;
                         }
                         // Look forward half max annular time after mid eclipse at limit line.
-                        if (lineTime.getTime() >= lastSearchTime)
+                        if (lineTime >= lastSearchTime)
                         {
                             bLastTimeFound = true;
-                            if (eastLimit == null)
+                            if (eastLimit === null)
                             {
                                 eastLimit = this.southUmbraLine[i].longitude;
                             }
@@ -2692,7 +3023,7 @@ function EclipseData(/* Object */ eclipse)
                             }
                             if (i > 0)
                             {
-                                if (westLimit == null)
+                                if (westLimit === null)
                                 {
                                     westLimit = this.southUmbraLine[i - 1].longitude;
                                 }
@@ -2720,7 +3051,7 @@ function EclipseData(/* Object */ eclipse)
                     i--;
                     if(i > 0)
                     {
-                        if (eastLimit == null)
+                        if (eastLimit === null)
                         {
                             eastLimit = this.southUmbraLine[i].longitude;
                         }
@@ -2734,7 +3065,7 @@ function EclipseData(/* Object */ eclipse)
                         }
                         if (i > 0)
                         {
-                            if (westLimit == null)
+                            if (westLimit === null)
                             {
                                 westLimit = this.southUmbraLine[i - 1].longitude;
                             }
@@ -2754,7 +3085,7 @@ function EclipseData(/* Object */ eclipse)
                     }
                 }
                 
-                if (southLimit == 90.0)	// Invalid time used.
+                if (southLimit === 89)	// Invalid time used.
                 {
                     return null;
                 }
@@ -2765,7 +3096,7 @@ function EclipseData(/* Object */ eclipse)
             }
             else
             {
-                limits.setSouthLimit(-90.0);
+                limits.setSouthLimit(-89.0);
             }
             
             
@@ -2776,13 +3107,13 @@ function EclipseData(/* Object */ eclipse)
                 {
                     for (var i = 0; i < this.centralLineTimes.length; i++)
                     {
-                        if (stance == 2)
+                        if (stance === 2)
                         {
                             if (this.centralLineTimes[i].getC2Date())
                             {
-                                if (this.centralLineTimes[i].getC2Date().getTime() >= time.getTime())
+                                if (this.centralLineTimes[i].getC2Date() >= julianDay)
                                 {
-                                    if(eastLimit == null)
+                                    if(eastLimit === null)
                                     {
                                         eastLimit = this.centralLine[i].longitude;
                                     }
@@ -2799,9 +3130,9 @@ function EclipseData(/* Object */ eclipse)
                         {
                             if (this.centralLineTimes[i].getC3Date())
                             {
-                                if (this.centralLineTimes[i].getC3Date().getTime() >= time.getTime())
+                                if (this.centralLineTimes[i].getC3Date() >= julianDay)
                                 {
-                                    if(westLimit == null)
+                                    if(westLimit === null)
                                     {
                                         westLimit = this.centralLine[i].longitude;
                                     }
@@ -2852,8 +3183,11 @@ function EclipseData(/* Object */ eclipse)
         
         if (limits)	// If we don't get these values, wrong eclipse or umbra lines not drawn yet.
         {
-            var longOffset = 2.0;
-            var latitudeOffset = 2.0;
+            var solar = new SolarCalc;
+            var julianDay = time;
+            var timeObj = this.toDate(time);
+            var longOffset = LONG_PENSHADOW_RESOLUTION;
+            var latitudeOffset = LAT_PENSHADOW_RESOLUTION;
             var deltaLong = 0.0;
             
             var totalLongOffset = 0.0;
@@ -2884,13 +3218,13 @@ function EclipseData(/* Object */ eclipse)
                     currentLatitude < limits.getNorthLimit();
                     currentLatitude += latitudeOffset
                     )
-            {                
+            {
                 totalLongOffset = 0.0;
                 currentLongitude = incrementLong(limits.getWestLimit(), totalLongOffset);
                 currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
                 last_c4Time = currentCircumstances.circDates.getC4Date();
                 last_c1Time = currentCircumstances.circDates.getC1Date();
-                lastSolarElevation = getSolarElevation(currentLatitude, currentLongitude, time);
+                lastSolarElevation = solar.getSolarElevation(currentLatitude, currentLongitude, timeObj);
                 wasVisible = currentCircumstances.isVisible;
                 
                 // Because of rounding issues, situtation may come up where eclipse just came up over horizon and already started.
@@ -2899,7 +3233,7 @@ function EclipseData(/* Object */ eclipse)
                 {
                     if (c4Time !== null && c1Time !== null)
                     {
-                        if (c4Time.getTime() >= time.getTime() && (c1Time.getTime() <= time.getTime()))	// Eclipse is still occurring.
+                        if (c4Time >= julianDay && (c1Time <= julianDay))	// Eclipse is still occurring.
                         {
                             continue;
                         }
@@ -2915,57 +3249,57 @@ function EclipseData(/* Object */ eclipse)
                     currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
                     c4Time = currentCircumstances.circDates.getC4Date();
                     c1Time = currentCircumstances.circDates.getC1Date();
-                    solarElevation = getSolarElevation(currentLatitude, currentLongitude, time);
+                    solarElevation = solar.getSolarElevation(currentLatitude, currentLongitude, timeObj);
                     isVisible = currentCircumstances.isVisible;
                     
                     if (isVisible || wasVisible)	// Eclipse must have been visible at some point to be a good point!
                     {
                         if (c4Time && last_c4Time)
-                        {
+                        {                            
                             if ((lastSolarElevation <= 0.0 && solarElevation > 0.0))	// The Sun has now risen.
                             {
-                                if (c4Time.getTime() >= time.getTime() && (c1Time.getTime() <= time.getTime()))	// Eclipse is still occurring.
+                                if (c4Time >= julianDay && (c1Time <= julianDay))	// Eclipse is still occurring.
                                 {
                                     deltaLong = (-1.0) * longOffset * (Math.abs(solarElevation) / (Math.abs(lastSolarElevation) + Math.abs(solarElevation)));
                                     c4Longitude = incrementLong(currentLongitude, deltaLong);
-                                    c4Shadow.push(new Position(currentLatitude, c4Longitude));
+                                    c4Shadow.push(new Position(currentLatitude, c4Longitude));                                    
                                 }
                             }
-                            if ((c4Time.getTime() >= time.getTime()) && (last_c4Time.getTime() <= time.getTime()) && solarElevation >= 0.0)	// Crossed times
+                            if ((c4Time >= julianDay) && (last_c4Time <= julianDay) && solarElevation >= 0.0)	// Crossed times
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c4Time.getTime()) / (Math.abs(time.getTime() - c4Time.getTime()) + Math.abs(time.getTime() - last_c4Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c4Time) / (Math.abs(julianDay - c4Time) + Math.abs(julianDay - last_c4Time)));
                                 c4Longitude = incrementLong(currentLongitude, deltaLong);
-                                c4Shadow.push(new Position(currentLatitude, c4Longitude));  
+                                c4Shadow.push(new Position(currentLatitude, c4Longitude));                                  
                             }
-                            if ((c4Time.getTime() <= time.getTime()) && (last_c4Time.getTime() >= time.getTime()) && solarElevation >= 0.0)	// Crossed times
+                            if ((c4Time <= julianDay) && (last_c4Time >= julianDay) && solarElevation >= 0.0)	// Crossed times
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c4Time.getTime()) / (Math.abs(time.getTime() - c4Time.getTime()) + Math.abs(time.getTime() - last_c4Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c4Time) / (Math.abs(julianDay - c4Time) + Math.abs(julianDay - last_c4Time)));
                                 c4Longitude = incrementLong(currentLongitude, deltaLong);
                                 c4Shadow.push(new Position(currentLatitude, c4Longitude)); // Actually otherside of shadow, for easy sorting.
-                            }
+                            }                            
                         }
                         
                         if (c1Time && last_c1Time)
                         {
-                            if ((c1Time.getTime() >= time.getTime()) && (last_c1Time.getTime() <= time.getTime()) && solarElevation >= 0.0) // Went from first contact has started, to have not started.
+                            if ((c1Time >= julianDay) && (last_c1Time <= julianDay) && solarElevation >= 0.0) // Went from first contact has started, to have not started.
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c1Time.getTime()) / (Math.abs(time.getTime() - c1Time.getTime()) + Math.abs(time.getTime() - last_c1Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c1Time) / (Math.abs(julianDay - c1Time) + Math.abs(julianDay - last_c1Time)));
                                 c1Longitude = incrementLong(currentLongitude, deltaLong);
-                                shadow.push(new Position(currentLatitude, c1Longitude));
+                                shadow.push(new Position(currentLatitude, c1Longitude));                                
                             }
-                            if ((c1Time.getTime() <= time.getTime()) && (last_c1Time.getTime() >= time.getTime()) && solarElevation >= 0.0) // Went from first contact has started, to have not started.
+                            if ((c1Time <= julianDay) && (last_c1Time >= julianDay) && solarElevation >= 0.0) // Went from first contact has started, to have not started.
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c1Time.getTime()) / (Math.abs(time.getTime() - c1Time.getTime()) + Math.abs(time.getTime() - last_c1Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c1Time) / (Math.abs(julianDay - c1Time) + Math.abs(julianDay - last_c1Time)));
                                 c1Longitude = incrementLong(currentLongitude, deltaLong);
-                                shadow.push(new Position(currentLatitude, c1Longitude));  // Actually otherside of shadow, for easy sorting.
+                                shadow.push(new Position(currentLatitude, c1Longitude));                                
                             }
                             if (lastSolarElevation >= 0.0 && solarElevation < 0.0)	// The Sun has now set.
                             {
-                                if (last_c4Time.getTime() >= time.getTime() && (last_c1Time.getTime() <= time.getTime()))	// Eclipse was still occurring.
+                                if (last_c4Time >= julianDay && (last_c1Time <= julianDay))	// Eclipse was still occurring.
                                 {
                                     deltaLong = (-1.0) * longOffset * (Math.abs(solarElevation) / (Math.abs(lastSolarElevation) + Math.abs(solarElevation)));
                                     c1Longitude = incrementLong(currentLongitude, deltaLong);
-                                    shadow.push(new Position(currentLatitude, c1Longitude));
+                                    shadow.push(new Position(currentLatitude, c1Longitude));                                   
                                     break;		// Once a first contact shadow position is grabbed  at sunset continue on to next latitude.  Since we are scanning east to west.
                                 }
                             }
@@ -2987,23 +3321,24 @@ function EclipseData(/* Object */ eclipse)
             {
                shadow = this.sortShadowLine(false, shadow);
             }
-                      
+            
+            smoothAtPoles(shadow, c4Shadow);
+            
             if(c4Shadow.length > 0)
-            {
+            {                
                 shadow = shadow.concat(c4Shadow.reverse());
             }
             
             if(shadow.length > 1)
             {
-                shadow = shadow.concat(shadow[0]);
+                shadow = shadow.concat(shadow[0]);                
             }
             
             if (shadow.length < 2)	// Not enough points found, error?
             {
                 shadow = null;
-            }
-            
-        }
+            }                    
+        } 
         
         return shadow;
     };
@@ -3078,14 +3413,17 @@ function EclipseData(/* Object */ eclipse)
      */
     this.drawUmbraShadow = function(time)
     {
+        var solar = new SolarCalc;
+        var julianDay = time;
+        var timeObj = this.toDate(time);
         var shadow = null;
         
-        var limits = this.getUmbraLimits(time);
+        var limits = this.getUmbraLimits(julianDay);
         
         if (limits)	// If we don't get these values, wrong eclipse or umbra lines not drawn yet.
         {
-            var longOffset = 0.5;       // Sample rate for longitude in umbra shadow drawing.
-            var latitudeOffset = 0.1;  // Sample rate for latitude in umbra shadow drawing.
+            var longOffset = LONG_UMBRA_SHADOW_RESOLUTION;       // Sample rate for longitude in umbra shadow drawing.
+            var latitudeOffset = LAT_UMBRA_SHADOW_RESOLUTION;  // Sample rate for latitude in umbra shadow drawing.
             
             var totalLongOffset = 0.0;
             var maxLongOffset = incrementLong(0.0, limits.getWestLimit() - limits.getEastLimit());
@@ -3122,7 +3460,7 @@ function EclipseData(/* Object */ eclipse)
                 currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
                 last_c3Time = currentCircumstances.circDates.getC3Date();
                 last_c2Time = currentCircumstances.circDates.getC2Date();
-                lastSolarElevation = getSolarElevation(currentLatitude, currentLongitude, time);
+                lastSolarElevation = solar.getSolarElevation(currentLatitude, currentLongitude, timeObj);
                 wasVisible = currentCircumstances.isVisible;
                 
                 // Because of rounding issues, situtation may come up where eclipse just came up over horizon and already started.
@@ -3131,7 +3469,7 @@ function EclipseData(/* Object */ eclipse)
                 {
                     if(c3Time !== null && c2Time !== null)
                     {
-                        if (c3Time.getTime() >= time.getTime() && (c2Time.getTime() <= time.getTime()))	// Eclipse is still occurring.
+                        if (c3Time >= julianDay && (c2Time <= julianDay))	// Eclipse is still occurring.
                         {
                             continue;
                         }
@@ -3147,7 +3485,7 @@ function EclipseData(/* Object */ eclipse)
                     currentCircumstances = this.calculateLocalCircumstances(currentLatitude, currentLongitude, 0.0);
                     c3Time = currentCircumstances.circDates.getC3Date();
                     c2Time = currentCircumstances.circDates.getC2Date();
-                    solarElevation = getSolarElevation(currentLatitude, currentLongitude, time);
+                    solarElevation = solar.getSolarElevation(currentLatitude, currentLongitude, timeObj);
                     isVisible = currentCircumstances.isVisible;
                     
                     if (isVisible || wasVisible)	// Eclipse must have been visible at some point to be a good point!
@@ -3156,7 +3494,7 @@ function EclipseData(/* Object */ eclipse)
                         {
                             if ((lastSolarElevation <= 0.0 && solarElevation > 0.0))	// The Sun has now risen.
                             {
-                                if (c3Time.getTime() >= time.getTime() && (c2Time.getTime() <= time.getTime()))	// Eclipse is still occurring.
+                                if (c3Time >= julianDay && (c2Time <= julianDay))	// Eclipse is still occurring.
                                 {
                                     deltaLong = (-1.0) * longOffset * (Math.abs(solarElevation) / (Math.abs(lastSolarElevation) + Math.abs(solarElevation)));
                                     c3Longitude = incrementLong(currentLongitude, deltaLong);
@@ -3164,17 +3502,17 @@ function EclipseData(/* Object */ eclipse)
                                 }
                             }
                             
-                            if((c3Time.getTime() >= time.getTime()) && (last_c3Time.getTime() <= time.getTime()) && solarElevation >= 0.0)	// Crossed times
+                            if((c3Time >= julianDay) && (last_c3Time <= julianDay) && solarElevation >= 0.0)	// Crossed times
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c3Time.getTime()) / (Math.abs(time.getTime() - c3Time.getTime()) + Math.abs(time.getTime() - last_c3Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c3Time) / (Math.abs(julianDay - c3Time) + Math.abs(julianDay - last_c3Time)));
                                 c3Longitude = incrementLong(currentLongitude, deltaLong);
                                 c3Shadow.push(new Position(currentLatitude, c3Longitude));
                             }
                          
                            
-                            if ((c3Time.getTime() <= time.getTime()) && (last_c3Time.getTime() >= time.getTime()) && solarElevation >= 0.0)	// Crossed times
+                            if ((c3Time <= julianDay) && (last_c3Time >= julianDay) && solarElevation >= 0.0)	// Crossed times
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c3Time.getTime()) / (Math.abs(time.getTime() - c3Time.getTime()) + Math.abs(time.getTime() - last_c3Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c3Time) / (Math.abs(julianDay - c3Time) + Math.abs(julianDay - last_c3Time)));
                                 c3Longitude = incrementLong(currentLongitude, deltaLong);
                                 shadow.push(new Position(currentLatitude, c3Longitude)); // Not really the c2 line, but makes sorting easy!!!
                             }
@@ -3183,22 +3521,22 @@ function EclipseData(/* Object */ eclipse)
                         if (c2Time && last_c2Time)
                         {
                             
-                            if ((c2Time.getTime() >= time.getTime()) && (last_c2Time.getTime() <= time.getTime()) && solarElevation >= 0.0)
+                            if ((c2Time >= julianDay) && (last_c2Time <= julianDay) && solarElevation >= 0.0)
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c2Time.getTime()) / (Math.abs(time.getTime() - c2Time.getTime()) + Math.abs(time.getTime() - last_c2Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c2Time) / (Math.abs(julianDay - c2Time) + Math.abs(julianDay - last_c2Time)));
                                 c2Longitude = incrementLong(currentLongitude, deltaLong);
                                 shadow.push(new Position(currentLatitude, c2Longitude));
                             }
-                            else if ((c2Time.getTime() <= time.getTime()) && (last_c2Time.getTime() >= time.getTime()) && solarElevation >= 0.0)
+                            else if ((c2Time <= julianDay) && (last_c2Time >= julianDay) && solarElevation >= 0.0)
                             {
-                                deltaLong = (-1.0) * longOffset * (Math.abs(time.getTime() - c2Time.getTime()) / (Math.abs(time.getTime() - c2Time.getTime()) + Math.abs(time.getTime() - last_c2Time.getTime())));
+                                deltaLong = (-1.0) * longOffset * (Math.abs(julianDay - c2Time) / (Math.abs(julianDay - c2Time) + Math.abs(julianDay - last_c2Time)));
                                 c2Longitude = incrementLong(currentLongitude, deltaLong);
                                 c3Shadow.push(new Position(currentLatitude, c2Longitude));  // Not really the c3 line, but makes sorting easy!!!
                             }
                                 
                             else if (lastSolarElevation >= 0.0 && solarElevation < 0.0)	// The Sun has now set.
                             {
-                                if (last_c3Time.getTime() >= time.getTime() && (last_c2Time.getTime() <= time.getTime()))	// Eclipse was still occurring.
+                                if (last_c3Time >= julianDay && (last_c2Time <= julianDay))	// Eclipse was still occurring.
                                 {
                                     deltaLong = (-1.0) * longOffset * (Math.abs(solarElevation) / (Math.abs(lastSolarElevation) + Math.abs(solarElevation)));
                                     c2Longitude = incrementLong(currentLongitude, deltaLong);
@@ -3311,60 +3649,33 @@ function EclipseData(/* Object */ eclipse)
      */
     this.getDate = function(circumstances)
     {
-        var julianDay = 0;	// Not sure if this is a Julian Day or a Julian Date?
-        
-        // Calculate the local time. Add 0.05 seconds, as we will be rounding up to the nearest 0.1 sec
-        // Removing (- 0.05) since we don't round anymore.
-        var time_diff = circumstances.t + this.besselianElements.t0 - this.besselianElements.dUTC / 3600.0;
-        
-        if (time_diff < 0.0) 
+        if(!isNaN(circumstances.t) && !isNaN(this.besselianElements.t0) && !isNaN(this.besselianElements.dUTC))
         {
-            time_diff = time_diff + 24.0;
-        }
-        if (time_diff >= 24.0) 
-        {
-            time_diff = time_diff - 24.0;
-        }
-        
-        // Calculate the JD for as close to local noon as possible, and convert into a date
-        // This algorithm, as is, will only work for the period 1900/03/01 to 2100/02/28
-        julianDay = Math.floor(this.besselianElements.julianDayMax - (time_diff / 24.0) + 1538.0);
-        var year = Math.floor((julianDay - 122.1) / 365.25);
-        var day = Math.floor(365.25 * year);
-        var month = Math.floor((julianDay - day) / 30.6001);
-        day = julianDay - day - Math.floor(30.6001 * month);
-        if (month < 13.5) 
-        {
-            month = month - 1;
-        } else 
-        {
-            month = month - 13;
-        }
-        if (month > 2.5) 
-        {
-            year -= 4716;
-        }	 
-        else 
-        {
-            year -= 4715;
+            var julianDay = 0;	// Not sure if this is a Julian Day or a Julian Date?
+
+            // Calculate the local time. Add 0.05 seconds, as we will be rounding up to the nearest 0.1 sec
+            // Removing (- 0.05) since we don't round anymore.
+            var time_diff = circumstances.t + this.besselianElements.t0 - this.besselianElements.dUTC / 3600.0;
+
+            if (time_diff < 0.0) 
+            {
+                time_diff = time_diff + 24.0;
+            }
+            if (time_diff >= 24.0) 
+            {
+                time_diff = time_diff - 24.0;
+            }
+
+            // Calculate the JD for as close to local noon as possible, and convert into a date
+            // This algorithm, as is, will only work for the period 1900/03/01 to 2100/02/28
+            julianDay = Math.floor(this.besselianElements.julianDayMax - (time_diff / 24.0) + 1538.0);
+            
+            julianDay += (time_diff / 24.0);
+
+            return julianDay;
         }
         
-        month--;	// For Javascript Date object.
-        
-        var hours = Math.floor(time_diff);
-        
-        var minutes = (time_diff * 60.0) - 60.0 * Math.floor(time_diff);
-        
-        var seconds = (minutes * 60.0) - 60.0 * Math.floor(minutes);
-        
-        var milliseconds = Math.round((seconds - Math.floor(seconds)) * 1000);
-        
-        minutes = Math.floor(minutes);
-        seconds = Math.floor(seconds);
-        
-        var ret_date = new Date(Date.UTC(year, month, day, hours, minutes, seconds, milliseconds));
-        
-        return ret_date;
+        return null;          
     };
     
     // Calculate all the circumstances!
@@ -3842,6 +4153,29 @@ function EclipseData(/* Object */ eclipse)
     {
         this.besselianElements.julianDayMax = julianDay;
         this.maxEclipseDate = julianDayToTime(this.besselianElements.julianDayMax);
+    };
+    
+     
+    this.getMaxEclipseDate = function()
+    {
+        return this.maxEclipseDate;
+    };
+    
+    this.getMaxEclipseDateJD = function()
+    {
+        return this.besselianElements.julianDayMax;
+    };
+    
+    this.isTotalOrAnnular = function()
+    {
+        if (this.type === "Annular" ||
+                    this.type === "Total" ||
+                    this.type === "Hybrid")
+            {
+                return true;
+            }
+            
+        return false;
     };
     
     this.set(eclipse);
