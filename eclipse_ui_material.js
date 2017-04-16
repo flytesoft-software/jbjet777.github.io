@@ -984,6 +984,7 @@ class EclipseUI
         var midEclipseItem = $("#mid-eclipse-sim");
         var thirdContactItem = $("#third-contact-sim");
         var fourthContactItem = $("#fourth-contact-sim");
+        var bRegisterMenuClick = true; //  Temporay value to protect against other menu items being "fat fingered" during menu animations.
         /* Map/Sim Menu End */
         
         var localTimeDiv = $("#local-time-pop");
@@ -1108,6 +1109,14 @@ class EclipseUI
         var locationMarker = map.addMarker(currentCoords, LOCATION_MARKER_URL);
         
         setLocation(currentCoords);
+        
+        function resetMenu()
+        {
+            window.setTimeout(function()
+            {
+                bRegisterMenuClick = true;
+            }, 500);
+        }
         
         function radToDeg(angleRad)
         {
@@ -1361,28 +1370,53 @@ class EclipseUI
             
             firstContactItem.click(function()
             {
-                stopShadowAnimation();
-                goC1ContactPoint();                                
+                if(bRegisterMenuClick)
+                {
+                    bRegisterMenuClick = false;
+                    stopShadowAnimation();
+                    goC1ContactPoint();
+                    resetMenu();
+                }
             });
             secondContactItem.click(function()
             {
-                stopShadowAnimation();
-                goC2ContactPoint();  
+                if(bRegisterMenuClick)
+                {
+                    bRegisterMenuClick = false;
+                    stopShadowAnimation();
+                    goC2ContactPoint(); 
+                    resetMenu();
+                }
             });
             midEclipseItem.click(function()
             {
-                stopShadowAnimation();
-                goMidContactPoint();                
+                if(bRegisterMenuClick)
+                {
+                    bRegisterMenuClick = false;
+                    stopShadowAnimation();
+                    goMidContactPoint();
+                    resetMenu();
+                }
             });
             thirdContactItem.click(function()
             {
-                stopShadowAnimation();
-                goC3ContactPoint();  
+                if(bRegisterMenuClick)
+                {
+                    bRegisterMenuClick = false;
+                    stopShadowAnimation();
+                    goC3ContactPoint();
+                    resetMenu();
+                }
             });
             fourthContactItem.click(function()
             {
-                stopShadowAnimation();
-                goC4ContactPoint();
+                if(bRegisterMenuClick)
+                {
+                    bRegisterMenuClick = false;
+                    stopShadowAnimation();
+                    goC4ContactPoint();
+                    resetMenu();
+                }
             });
             
             calculateWorker.onmessage = onCalculateMsg;
@@ -1414,10 +1448,15 @@ class EclipseUI
             
             realtimeShadowMenuItem.click(function(event)
             {
-                mapMenuID.transitionEndOne(function(event)
+                if(bRegisterMenuClick)
                 {
-                    startRealTimeAnimation();
-                });
+                    bRegisterMenuClick = false;
+                    mapMenuID.transitionEndOne(function(event)
+                    {
+                        startRealTimeAnimation();
+                    });
+                    resetMenu();
+                };
             });
             
             material.onHeaderChange(function (event)
@@ -1971,17 +2010,22 @@ class EclipseUI
                 console.timeEnd("DrawLines");
                 animateShadowMenuItem.click(function(ev)
                 {
-                    mapMenuID.transitionEndOne(function(ev)
+                    if(bRegisterMenuClick)
                     {
-                        if (shadowAnimator.isAnimating())
+                        bRegisterMenuClick = false;
+                        mapMenuID.transitionEndOne(function(ev)
                         {
-                            stopShadowAnimation();
-                        } 
-                        else
-                        {
-                            startShadowAnimation();
-                        }
-                    });
+                            if (shadowAnimator.isAnimating())
+                            {
+                                stopShadowAnimation();
+                            } 
+                            else
+                            {
+                                startShadowAnimation();
+                            }
+                        });
+                        resetMenu();
+                    }
                 });
                 
                 animateShadowMenuItem.removeAttr("disabled");
