@@ -10,7 +10,7 @@ and open the template in the editor.
         <meta charset="UTF-8">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height">
         <meta name="theme-color" content="indigo">
 
@@ -32,7 +32,11 @@ and open the template in the editor.
         
         <!-- Openlayers API -->
         <link rel="stylesheet" href="ol/ol.css" />
-        <script src="ol/ol.js"></script>
+        <script src="ol/olcesium.js"></script>
+        <script src="ol/Cesium/Cesium.js"></script>
+        
+        <!-- EasyMap API -->
+        <script src="easymap.js"></script>
                 
         <!-- Eclipse Chaser Stylesheets -->
         <link rel="stylesheet" href="eclipse.css">
@@ -86,6 +90,7 @@ and open the template in the editor.
             <!-- MAP MENU -->
             <ul id="map-menu" class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect"
                 data-mdl-for="map-menu-button">
+                <li class="mdl-menu__item eclipse-no-show" id="globe">3D Globe (Experimental)</li>
                 <li disabled="true" class="mdl-menu__item" id="animate-shadow">Animate Shadow</li>
                 <li class="mdl-menu__item" id="realtime-animate">Realtime Shadow</li>
                 <li class="mdl-menu__item eclipse-no-show" id="first-contact-sim">First Contact</li>
@@ -327,7 +332,11 @@ and open the template in the editor.
                             <button id="map-location-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--primary">
                                 <i class="material-icons">my_location</i>
                             </button>
-                        </div>                        
+                        </div>
+
+                        <button id="map-offline-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored eclipse-offline-button-placement">
+                            <i class="material-icons">sync</i>
+                        </button>                   
                         
                     </div>
                 </section>
@@ -369,14 +378,20 @@ and open the template in the editor.
             <!-- FIXED FOOTER -->
             <footer class="mdl-mini-footer eclipse-footer">
                 <ul class="mdl-mini-footer__link-list eclipse-footer-list">
-                    <li class="eclipse-li-location"><a href="#"><i id="location-icon" class="material-icons eclipse-location-icon-size">location_off</i></a></li>
+                    <li class="eclipse-li-location">
+                        <a href="#">
+                            <button id="location-icon" class="mdl-button mdl-js-button mdl-button--fab mdl-button--icon mdl-js-ripple-effect eclipse-flat-button eclipse-location-icon-size">
+                                <i class="material-icons">location_off</i>
+                            </button>
+                        </a>
+                    </li>
                     <li><a href="#">Lat<br><span id='lat'>00.00</span></a></li>
                     <li><a href="#"></a></li>
                     <li><a href="#">Long<br><span id='long'>000.00</span></a></li>
                     <li><a href="#"></a></li>
                     <li><a href="#">Alt<br><span id='alt'>-0000</span> ft</a></li>
                     <li><a href="#"></a></li>
-                    <li><a href="#">Time (<span id="zone"></span>)<br><span id='time'>12:00:00PM</span></a></li>
+                    <li><button id="time-button" class="mdl-button mdl-js-button mdl-js-ripple-effect eclipse-time-button"><a href="#">Time (<span id="zone"></span>)<br><span id='time'>12:00:00PM</span></a></button></li>
                 </ul>
             </footer>
             <!-- FIXED FOOTER END -->

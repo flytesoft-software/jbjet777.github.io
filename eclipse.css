@@ -228,7 +228,23 @@ and open the template in the editor.
 .eclipse-location-icon-size
 {
     font-size: x-large;
-    transform: translateY(-10%);
+    transform: translateY(-.4em) translateX(-.4em);
+    margin-right: -.6em;
+}
+
+.eclipse-time-button
+{
+    line-height: inherit;
+    height: inherit;
+    color: inherit;    
+    margin-left: -1em;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.eclipse-time-button:hover
+{
+    background-color: transparent;
 }
 
 @keyframes footer-animation 
@@ -339,18 +355,19 @@ and open the template in the editor.
 {
     z-index: 9999;
     position: fixed;
-    bottom: 10em;
+    bottom: 28%;
     right: -15vw;
     
     transition-property: all;
     transition-duration: .3s;
     transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
     transition-delay: .1s;
+    transform: translateX(50%) translateY(50%);
 }
 
 .eclipse-map-button-placement-transition
 {
-    right: 2vw;
+    right: 10vw;
 }
 
 .eclipse-zoom-button-placement
@@ -369,6 +386,29 @@ and open the template in the editor.
 .eclipse-zoom-button-placement-transition
 {
     left: 2vw;
+}
+
+.eclipse-offline-button-placement
+{
+    z-index: 9999;
+    position: fixed;
+    bottom: 18%;
+    right: 10vw;
+    opacity: 0;
+    visibility: hidden;
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+    
+    transform: translateX(50%) translateY(50%);
+}
+
+.eclipse-offline-button-placement-transition
+{
+    visibility: visible;
+    opacity: 1;
 }
 
 .eclipse-minus-button-font
@@ -404,13 +444,24 @@ and open the template in the editor.
     top: .5em;
 }
 
+.eclipse-flat-button
+{    
+    background: transparent;
+    box-shadow: none;
+}
+
+.eclipse-flat-button:hover
+{
+    background-color: transparent;
+}
+
 .eclipse-map-search-button
 {
     display: none;
     position: absolute;
-    right: 2em;
+    right: 2.5em;
     top: -.35em;
-    max-width: calc(100% - 5em);
+    max-width: calc(100% - 6em);
     min-width: 50%;
     width: 400px;
     z-index: 9999;
@@ -472,11 +523,53 @@ and open the template in the editor.
 
 @media only screen and (min-width: 560px) 
 {
+    .eclipse-map-button-placement
+    {
+        z-index: 9999;
+        position: fixed;
+        bottom: 13em;
+        right: -15vw;
+
+        transition-property: all;
+        transition-duration: .3s;
+        transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+        transition-delay: .1s;
+        transform: translateX(50%) translateY(50%);
+    }
+
+    .eclipse-map-button-placement-transition
+    {
+        right: 10vw;
+    }
+    
+    .eclipse-offline-button-placement
+    {
+        z-index: 9999;
+        position: fixed;
+        bottom: 5.2em;
+        right: 10vw;
+        opacity: 0;
+        visibility: hidden;
+
+        transition-property: all;
+        transition-duration: .3s;
+        transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+        transition-delay: .1s;
+
+        transform: translateX(50%) translateY(50%);
+    }
+
+    .eclipse-offline-button-placement-transition
+    {
+        visibility: visible;
+        opacity: 1;
+    }
+
    .eclipse-map-search-button
     {
         display: none;
         position: absolute;
-        right: 2em;
+        right: 3em;
         top: -.25em;
         width: 50%;
         z-index: 9999;
@@ -502,7 +595,7 @@ and open the template in the editor.
         width: calc(50% - 5em);
         z-index: 999;
         top: 3em;
-        right: 2em;
+        right: 3em;
         overflow-y: scroll;
         box-shadow: 0 0 2px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.24), inset 0 4px 6px -4px rgba(0,0,0,.24);
         transition-property: all;
@@ -613,6 +706,14 @@ and open the template in the editor.
 {
     visibility: visible !important;
     top: 1%;
+}
+
+.eclipse-main-expand
+{
+    position: absolute;
+    top: 0;
+    height: 100vh;
+    width: 100vw;
 }
 
 .simulation-content

@@ -6,739 +6,13 @@
 
 "use strict";
 
-class EasyMap
-{
-    constructor(refTarget, refZoom, coordinates)
-    {
-        var MAX_ZOOM = 28;
-        var MIN_ZOOM = 0;
-        var ONLINE_MAP = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
-        var OFFLINE_MAP = 'images/offline/{z}/{x}/{y}.jpg';
-        var firstDragCoord = null;
-        var lastDragCoord = null;
-        var dragEndCallBack = null;
-        var dragStartCallBack = null;
-        var redrawCallBack = null;
-        var mapClickCallBack = null;
-        var mapDoubleClickCallback = null;
-        var isZooming = false;
-        var callDragStartOnce = true;
-        
-        var interAct = ol.interaction.defaults({
-            altShiftDragRotate: false,
-            pinchRotate: false,
-            shiftDragZoom: false});
-        
-        var view = new ol.View(
-                {
-                     center: ol.proj.fromLonLat([coordinates.longitude, coordinates.latitude]),
-                     zoom: refZoom
-                });
-                
-        var drawSource = new ol.source.Vector({ wrapX: true});
-        
-        var map = new ol.Map(
-                {
-                    target: refTarget,
-                    layers: [new ol.layer.Tile(
-                            {
-                                source: new ol.source.OSM({url: ONLINE_MAP})
-                            })],
-                    view: view,
-                    controls: [],
-                    interactions: interAct,
-                    loadTilesWhileAnimating: true,
-                    loadTilesWhileInteracting: true
-                });
-                
-        var drawLayer = new ol.layer.Vector({
-                                source: drawSource,
-                                style: new ol.style.Style({stroke: new ol.style.Stroke({color: 'black', width: 2})}),
-                                updateWhileAnimating: true,
-                                updateWhileInteracting: true,
-                                renderBuffer: 2000
-                            });
-        
-        map.addLayer(drawLayer);
-        
-        var lastLeftLong = getBounds().bottomLeft.longitude;
-        var lastRightLong = getBounds().topRight.longitude;
-        
-        /*
-         * Makes sure value is inside circle 360.0 degrees!
-         * @param {Number} value
-         * @returns {Number}
-         */
-        function rev(/* Number */ value)
-        {
-            if (value > 360.0 || value < 0.0)
-            {
-                return (value - (Math.floor(value / 360.0) * 360.0));
-            }
-            
-            if(value > 180)
-            {
-                value -= 360;
-            }
-
-            return value;
-        }
-        
-        /*
-         * Convert an array of javaScript Coordinates to OpenLayer point array.
-         * @param {Coordinates} coords -- Array of javaScript Coordinates
-         * @returns {Array|EasyMap.constructor.coordsToOpenLayers.points}
-         */
-        function coordinatesToOpenLayers(coords)
-        {
-            var points = [];
-            var lastLong = 0;
-            var longFix = 0;
-            var fixedLong = 0;
-            var leftLong = getBounds().bottomLeft.longitude;
-                                                            
-            for (var i = 0; i < coords.length; i++)
-            {
-                if(i === 0 && typeof(leftLong) === 'number') // To get large polygons to display correctly use coordinate "system" of the left side of the current view.
-                {
-                    if (leftLong > 90 && coords[i].longitude < -90)
-                    {
-                        longFix = 360;
-                    } else if (leftLong < -90 && coords[i].longitude > 90)
-                    {
-                        longFix = -360;
-                    }
-                }               
-                if (i > 0 && longFix === 0)
-                {
-                    if (lastLong > 90 && coords[i].longitude < -90)
-                    {
-                        longFix = 360;
-                    } else if (lastLong < -90 && coords[i].longitude > 90)
-                    {
-                        longFix = -360;
-                    }
-                }
-               
-                fixedLong = coords[i].longitude + longFix;
-                
-                if(fixedLong > 360)
-                {
-                    fixedLong -= 360;
-                }
-                if(fixedLong < -360)
-                {
-                    fixedLong += 360;
-                }
-                                
-                points.push([fixedLong, coords[i].latitude]);
-                lastLong = coords[i].longitude;
-            }
-            
-             return points;
-        }
-        
-        /*
-         * Splits big array into small arrays.
-         * @param {Array} arr -- Array to be split
-         * @param {Number} chunkSize - How big each smaller array should be.
-         * @returns {Array}
-         */
-        function chunckArray(arr, chunkSize) 
-        {
-            var groups = [], i;
-            
-            for (i = 0; i < arr.length; i += chunkSize) 
-            {
-                groups.push(arr.slice(i, i + chunkSize));
-            }
-            
-            return groups;
-        }
-        
-        /*
-         * Convert an array of javaScript Coordinates to OpenLayer point array.
-         * @param {Coordinates} coords -- Array of javaScript Coordinates
-         * @returns {Array|EasyMap.constructor.coordsToOpenLayers.points}
-         */
-        function coordinatesToOpenLayers2(coords)
-        {
-            var points = [];
-                      
-            for (var i = 0; i < coords.length; i++)
-            {                               
-                points.push([coords[i].longitude, coords[i].latitude]);
-            }
-            
-            return points;
-        }
-        
-        /* Creates a great circle between 
-         * Two inputed coordinate points.
-         * @param {Position} pos1
-         * @param {Position} pos2
-         * @returns {EasyMap.addGreatCircle.polyLine|EasyMap@call | null}
-         */
-        this.addGreatCircle = function(pos1, pos2)
-        {
-            var coords = [];
-            var generator = new arc.GreatCircle({x: pos1.longitude, y: pos1.latitude}, {x: pos2.longitude, y: pos2.latitude});
-            var line = generator.Arc(50, {offset: 10});
-            for(var x = 0; x < line.geometries.length; x++)
-            {
-                for(var y = 0; y < line.geometries[x].coords.length; y++)
-                {
-                    var pos = new Position(line.geometries[x].coords[y][1], line.geometries[x].coords[y][0]);
-                    if(isNaN(pos.latitude) || isNaN(pos.longitude))
-                    {
-                        return null;
-                    }
-                    coords.push(pos);
-                }
-            }
-            
-            if(coords.length > 1)
-            {
-                var polyLine = this.addPolyLine(coords);
-                               
-                return polyLine;
-            }
-            else
-            {
-                console.log("Not enough points created for great circle line.");
-            }
-            
-            return null;
-        };
-        
-        /*
-         * Add a polyline to the map.  Returns handle to feature or null on failure.
-         * @param {Array} coords - Array of coordinates for line.
-         * @returns {ol.Feature | null}  
-         */
-        this.addPolyLine = function(coords)
-        {
-            if(coords)
-            {
-                var points = coordinatesToOpenLayers(coords);
-                
-                var lineString = new ol.geom.LineString(points);
-                lineString.transform('EPSG:4326', 'EPSG:3857');
-                
-                var feature = new ol.Feature({
-                    geometry: lineString
-                });
-            
-                drawSource.addFeature(feature);
-                
-                feature.reDraw = function()
-                {
-                    feature.setCoordinates(coords);
-                }; 
-                
-                feature.setCoordinates = function(coords)
-                {
-                    var points = coordinatesToOpenLayers(coords);
-                    var lineString = new ol.geom.LineString(points);
-                    lineString.transform('EPSG:4326', 'EPSG:3857');
-                    
-                    this.setGeometry(lineString);                    
-                };
-                            
-                return feature;            
-            }
-            
-            return null;
-        };
-        
-        /*
-         * Returns an array of line features created from a large amount of coordinates.
-         * @param {Array} coords - Array of Positions to draw
-         * @returns {Array}
-         */
-        this.addMultiPolyLine = function(coords)
-        {
-            var lineArray = [];
-            
-            if(coords)
-            {
-                var multiCoords = chunckArray(coords, 100);
-                
-                for(var i = 0; i < multiCoords.length; i++)
-                {
-                    if(i <  (multiCoords.length - 1))
-                    {
-                       multiCoords[i].push(multiCoords[i + 1][0]);
-                    }
-                    lineArray.push(this.addPolyLine(multiCoords[i]));
-                }
-            }
-            
-            lineArray.reDraw = function()
-            {
-                for(var i = 0; i < lineArray.length; i++)
-                {
-                    if(lineArray[i])
-                    {
-                        lineArray[i].reDraw();
-                    }
-                }
-            };
-                        
-            lineArray.isValid = function()
-            {
-                if(lineArray.length > 1)
-                {
-                    return true;
-                }
-                return false;
-                    
-            };
-            
-            return lineArray;
-        };
-        
-        this.addPolygon = function(coords, options)
-        {
-            if(coords)
-            {
-                var fillColor = 'rgba(0, 0, 0, .5)';
-                var strokeColor = 'black';
-                var strokeWidth = 0.1;
-                
-                var fill = new ol.style.Fill();
-                
-                if(options)
-                {
-                    if(options.fill_color)
-                    {
-                        fillColor = options.fill_color;
-                    }
-                    if(options.stroke_color)
-                    {
-                        strokeColor = options.stroke_color;
-                    }
-                    if(typeof(options.stroke_width) === "number")
-                    {
-                        strokeWidth = options.stroke_width;
-                    }
-                }
-                
-                var style = new ol.style.Style(
-                    {
-                        stroke: new ol.style.Stroke(
-                        {
-                            color: strokeColor,
-                            width: strokeWidth
-                        }),
-                        fill: new ol.style.Fill(
-                        {
-                            color: fillColor
-                        })
-                    });
-                
-                var points = coordinatesToOpenLayers(coords);
-               
-                var lineRing = new ol.geom.LinearRing(points);
-                lineRing.transform('EPSG:4326', 'EPSG:3857');
-                
-                var polygon = new ol.geom.Polygon();
-                polygon.appendLinearRing(lineRing);
-                               
-                var feature = new ol.Feature({
-                    geometry: polygon
-                });
-                
-                feature.setStyle(style);
-                
-                drawSource.addFeature(feature);
-                
-                feature.setCoordinates = function(coords)
-                {
-                    var points = coordinatesToOpenLayers(coords);
-                    var lineRing = new ol.geom.LinearRing(points);
-                    lineRing.transform('EPSG:4326', 'EPSG:3857');
-                    var polygon = new ol.geom.Polygon();
-                    polygon.appendLinearRing(lineRing);
-                    this.setGeometry(polygon);                    
-                };
-                                          
-                return feature;            
-            }
-            
-            return null;
-        };
-        
-        /* Add a marker to the map. 
-         * @param {Coordinate} coords -- Coordinates of marker.
-         * @param {String} imgSrc -- Image URL
-         * @returns {ol.Feature}
-         */
-        this.addMarker = function(coords, imgSrc)
-        {
-            var iconStyle = new ol.style.Style(
-                    {
-                        image: new ol.style.Icon(
-                        {
-                            src: imgSrc
-                        })
-                    });
-                    
-            var point = new ol.geom.Point([coords.longitude, coords.latitude]);
-            point.transform('EPSG:4326', 'EPSG:3857');
-            
-            var iconFeature = new ol.Feature(
-                    {
-                        geometry: point
-                    });
-                    
-            iconFeature.setStyle(iconStyle);
-            
-            drawSource.addFeature(iconFeature);
-            
-            iconFeature.setLocation = function(coords)
-            {
-                var point = new ol.geom.Point([coords.longitude, coords.latitude]);
-                point.transform('EPSG:4326', 'EPSG:3857');
-                
-                this.setGeometry(point);
-            };
-            
-            return iconFeature;
-        };
-        
-        /*
-         * Returns the center of the current map view.
-         * @returns {Position}
-         */
-        this.getCenter = function()
-        {
-            var center = ol.proj.transform(view.getCenter(), 'EPSG:3857', 'EPSG:4326');
-            
-            return new Position(center[1], center[0]);
-        };
-        
-        /*
-         * Returns the bottom left and top right corner positions on the current view of the map.
-         * @returns {Object} - {bottomLeft: {Postion}, topRight: {Position}
-         */
-        function getBounds()
-        {
-            var viewExtent = view.calculateExtent(map.getSize());
-            var bL = ol.proj.transform([viewExtent[0], viewExtent[1]], 'EPSG:3857', 'EPSG:4326');
-            var tR = ol.proj.transform([viewExtent[2], viewExtent[3]], 'EPSG:3857', 'EPSG:4326');
-            
-            return{
-                bottomLeft: new Position(bL[1], bL[0]),
-                topRight: new Position(tR[1], tR[0])
-            };
-        };
-        
-        /*
-         * Remove a feature (Polyline, polygon, etc. from map. 
-         * @param {ol.Feature} feature
-         * @returns {null}
-         */
-        this.removeFeature = function(feature)
-        {
-            if(feature)
-            {
-                if(Array.isArray(feature))
-                {
-                    while(feature.length > 0)
-                    {
-                        drawSource.removeFeature(feature.pop());
-                    }
-                    
-                    return feature;
-                }
-                drawSource.removeFeature(feature);
-            }
-            
-            return null;
-        };
-        
-        /*
-         * Re-render map.
-         * @returns {undefined}
-         */
-        this.render = function()
-        {
-            map.render();
-        };
-        
-        /*
-         * Clears the map of all drawn features.
-         * @returns {undefined}
-         */
-        this.clearMap = function()
-        {
-            drawSource.clear(true);
-        };
-                
-        map.on("pointermove", function(ev)
-        {
-            if(ev.dragging)
-            {
-                if(!firstDragCoord)
-                {
-                    firstDragCoord = ev.pixel;
-                }
-            
-                lastDragCoord = ev.pixel;
-                
-                if(dragStartCallBack)
-                {
-                    if(callDragStartOnce)
-                    {
-                        callDragStartOnce = false;
-                        dragStartCallBack(ev);
-                    }
-                }
-            }
-        });
-        
-        map.on("moveend", function(ev)
-        {
-            console.log("MOVE END");
-            
-            var leftLong = getBounds().bottomLeft.longitude;
-            var rightLong = getBounds().topRight.longitude;
-            
-            if(redrawCallBack) // Check if the left corner of view crossed a change over point to trigger redraw of polygons.
-            {
-                if(lastLeftLong > 0 && leftLong < 0)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastLeftLong < 0 && leftLong > 0)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastLeftLong < -180 && leftLong > -180)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastLeftLong > -180 && leftLong < -180)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastLeftLong > 180 && leftLong < 180)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastLeftLong < 180 && leftLong > 180)
-                {
-                    redrawCallBack(ev);
-                }
-                
-                if(lastRightLong > 0 && rightLong < 0)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastRightLong < 0 && rightLong > 0)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastRightLong < -180 && rightLong > -180)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastRightLong > -180 && rightLong < -180)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastRightLong > 180 && rightLong < 180)
-                {
-                    redrawCallBack(ev);
-                }
-                else if(lastRightLong < 180 && rightLong > 180)
-                {
-                    redrawCallBack(ev);
-                }
-            }
-            lastLeftLong = leftLong;
-            lastRightLong = rightLong;
-            
-            callDragStartOnce = true;
-            if(firstDragCoord && lastDragCoord)
-            {
-                if(dragEndCallBack)
-                {
-                    var distance = 0;
-                    if(!isZooming)
-                    {
-                        var a = firstDragCoord[0] - lastDragCoord[0];
-                        var b = firstDragCoord[1] - lastDragCoord[1];
-                        a *= a;
-                        b *= b;
-               
-                        distance = Math.sqrt(a + b);
-                    }
-                    else
-                    {
-                        isZooming = false;
-                    }
-                    ev.distance = Math.round(distance);
-                    dragEndCallBack(ev);
-                }
-            }
-
-           firstDragCoord = null;
-           lastDragCoord = null;
-        });
-        
-        function mapClick(ev)
-        {
-           if(mapClickCallBack)
-           {
-               var clickPlace = ol.proj.toLonLat(ev.coordinate);
-
-               mapClickCallBack(new Position(clickPlace[1], clickPlace[0]));
-           } 
-        }
-        
-        this.onDoubleClick = function(callback)
-        {
-            mapDoubleClickCallback = callback;
-            
-            map.on("doubleclick", mapDoubleClickCallback);
-        };
-        
-        this.onClick = function(callback)
-        {
-           mapClickCallBack = callback;
-           map.on("singleclick", mapClick);
-        };
-        
-        this.clickOff = function()
-        {
-            if(mapClickCallBack)
-            {
-                map.un("singleclick", mapClick);
-                mapClickCallBack = null;
-            }
-        };
-        
-        this.doubleClickOff = function()
-        {
-            if(mapDoubleClickCallback)
-            {
-                map.un("doubleclick", mapDoubleClickCallback);
-                mapDoubleClickCallback = null;
-            }
-        };
-        
-        this.onDragEnd = function(callback)
-        {
-            dragEndCallBack = callback;
-        };
-        
-        this.onDragStart = function(callback)
-        {
-            dragStartCallBack = callback;            
-        };
-        
-        this.onRedrawCall = function(callback)
-        {
-            redrawCallBack = callback;
-        };
-        
-        this.on = function(event, func, thisref)
-        {
-            return map.on(event, func, thisref);
-        };
-        
-        this.onZoomEnd = function(func, thisRef)
-        {
-            return view.on("change:resolution", function(ev)
-            {
-                isZooming = true;
-                map.once("moveend", func, thisRef);                
-            }, thisRef);
-        };
-        
-        this.updateSize = function()
-        {
-            map.updateSize();
-        };
-                
-        this.zoomIn = function()
-        {
-            if(view.getZoom() < MAX_ZOOM)
-            {
-                view.setZoom(view.getZoom() + 1);
-            }
-        };
-        
-        this.zoomOut = function()
-        {
-            if(view.getZoom() > MIN_ZOOM)
-            {
-                view.setZoom(view.getZoom() - 1);
-            }
-        };
-        
-        this.setCenter = function(coords)
-        {
-            if(coords)
-            {
-                view.setCenter(ol.proj.fromLonLat([coords.longitude, coords.latitude]));
-            }
-        };
-        
-        /*
-         * Zooms map to inputed value.
-         * @param {Number} zoomVal - Value of zoom to set.
-         * @returns {undefined}
-         */
-        this.setZoom = function(zoomVal)
-        {
-            if(typeof(zoomVal) === "number")
-            {
-                if(zoomVal > MAX_ZOOM)
-                {
-                    view.setZoom(MAX_ZOOM);
-                }
-                else if(zoomVal < MIN_ZOOM)
-                {
-                    view.setZoom(MIN_ZOOM);
-                }
-                else
-                {
-                    view.setZoom(zoomVal);
-                }
-            }
-            else
-            {
-                throw "setZoom needs a number value input.";
-            }
-        };
-        
-        this.getZoom = function()
-        {
-            return view.getZoom();
-        };
-        
-        this.getMaxZoom = function()
-        {
-            return MAX_ZOOM;
-        };
-        
-        this.getMinZoom = function()
-        {
-            return MIN_ZOOM;
-        };
-    }
-}
-
 class LineWorkers
 {
     constructor(func)
     {
         if(typeof(func) !== "function")
         {
-            throw "Must use callback function in consctructor.";
+            throw new Error("Must use callback function in consctructor.");
         }
         var m_eclipse = null;
         var callback = func;
@@ -956,9 +230,10 @@ class EclipseUI
         var longCickFired = false; // Set true during map click press, long presses are not clicks, so ignore them.
         var mapPositionLock = true;
         var tempIgnoreLock = false;
+        var tempIgnoreOfflineMap = false;
                
         var jMap = $("#map");
-                
+        var main = $("main");       
         var simulationTab = $("#simulation-tab");
         var sun = $("#sun");
         var moon = $("#moon");
@@ -974,6 +249,8 @@ class EclipseUI
         var mapSection = $("#map-tab");
         var mapButtons = $("#map-buttons");
         var zoomButtons = $("#zoom-buttons");
+        var mapOfflineButton = $("#map-offline-button");
+        var timeButton = $("#time-button");
         
         /* Map/Sim Menu */
         var mapMenuButton = $("#map-menu-button");
@@ -984,7 +261,9 @@ class EclipseUI
         var midEclipseItem = $("#mid-eclipse-sim");
         var thirdContactItem = $("#third-contact-sim");
         var fourthContactItem = $("#fourth-contact-sim");
+        var globeMenuItem = $("#globe");
         var bRegisterMenuClick = true; //  Temporay value to protect against other menu items being "fat fingered" during menu animations.
+        var bGlobeMode = false;
         /* Map/Sim Menu End */
         
         var localTimeDiv = $("#local-time-pop");
@@ -994,7 +273,8 @@ class EclipseUI
         var realTimeInfoID = $("#realtime-shadow");
         var contactPointID = $("#contact-point");
         var mapMenuID = $("#map-menu");
-        var locationIcon = $("#location-icon");
+        var locationIconButton = $("#location-icon");
+        var locationIcon =  locationIconButton.children("i");
         var mapSearchBoxID = $("#map-search-box");
         var mapSearchInputID = $("#map-search-input");
         var mapSearchMenuID = $("#map-search-menu");
@@ -1256,6 +536,7 @@ class EclipseUI
         
         function displaySimMenuItems()
         {
+            globeMenuItem.hide();
             firstContactItem.show();
             midEclipseItem.show();
             fourthContactItem.show();
@@ -1269,11 +550,84 @@ class EclipseUI
         
         function hideSimMenuItems()
         {
+            globeMenuItem.show();
             firstContactItem.hide();
             secondContactItem.hide();
             midEclipseItem.hide();
             thirdContactItem.hide();
             fourthContactItem.hide();
+        }
+        
+        function setSimMenuOverFlow()
+        {
+            if (!shadowAnimator.isAnimating())
+            {
+                if (midTime)
+                {
+                    displaySimMenuItems();
+
+                    if (c2Time)
+                    {
+                        displayCentralSimMenuItems();
+                        switch (simulationSelection)
+                        {
+                            case MID_SELECTION:
+                                goMidContactPoint();
+                                break;
+                            case C1_SELECTION:
+                                goC1ContactPoint();
+                                break;
+                            case C2_SELECTION:
+                                goC2ContactPoint();
+                                break;
+                            case C3_SELECTION:
+                                goC3ContactPoint();
+                                break;
+                            case C4_SELECTION:
+                                goC1ContactPoint();
+                            default:
+                                goMidConactPoint();
+                                break;
+                        }
+                    } else
+                    {
+                        switch (simulationSelection)
+                        {
+                            case MID_SELECTION:
+                                goMidContactPoint();
+                                break;
+                            case C1_SELECTION:
+                                goC1ContactPoint();
+                                break;
+                            case C4_SELECTION:
+                                goC1ContactPoint();
+                            default:
+                                goMidContactPoint();
+                                break;
+                        }
+                    }
+                } else
+                {
+                    noSimEclipse();
+                }
+            }
+        }
+        
+        function setOfflineMap()
+        {
+            map.setOfflineMap();
+            
+            if(!mapOfflineButton.hasClass("eclipse-offline-button-placement-transition"))
+            {
+                mapOfflineButton.addClass("eclipse-offline-button-placement-transition");
+            }
+            showToast("Connection lost. Going to offline mode.");
+        }
+        
+        function setOnlineMap()
+        {
+            map.setOnlineMap();
+            mapOfflineButton.removeClass("eclipse-offline-button-placement-transition");
         }
                         
         function bindEvents()
@@ -1281,6 +635,73 @@ class EclipseUI
             console.log("Binding Eclipse UI events.");
             
             window.setInterval(checkLocalTimeZone, 30000);
+            
+            globeMenuItem.click(function()
+            {
+                if(bGlobeMode)
+                {
+                    bGlobeMode = false;
+                    globeMenuItem.html("3D Globe (Experimental)");
+                    map.disableGlobe();
+                }
+                else
+                {
+                    bGlobeMode = true;
+                    globeMenuItem.html("2D Map");
+                    map.enableGlobe();
+                }
+            });
+            
+            mapOfflineButton.click(function()
+            {
+                console.log("Attempt to restart online map.");
+                if(window.navigator.onLine)
+                {
+                    setOnlineMap();
+                }
+                else
+                {
+                    showToast("No connection available.");
+                }
+                
+            });
+            
+            map.onTileLoadError(function()
+            {
+               if(!tempIgnoreOfflineMap  && map.isMapOnline())
+               {
+                   tempIgnoreOfflineMap = true;
+                   console.log("Map possibly gone offline.");
+                   setOfflineMap();
+                   window.setTimeout(function()
+                   {
+                       tempIgnoreOfflineMap = false;
+                   }, 1000);
+               }
+            });
+            
+            if(window.navigator.onLine)
+            {
+                console.log("App is starting online.");
+                setOnlineMap();
+            }
+            else
+            {
+                console.log("App is starting offline.");
+                setOfflineMap();
+            }
+            
+            window.addEventListener("offline", function(event)
+            {
+               console.log("App is offline.");
+               setOfflineMap();
+            });            
+            
+            window.addEventListener("online", function(event)
+            {
+               console.log("App is online."); 
+               setOnlineMap();
+            });            
             
             material.onPageChange(function (event)
             {
@@ -1306,60 +727,7 @@ class EclipseUI
                     updateSimMetrics(mapHeight);
                     material.disableYScroll();
                     mapMenuButton.show();
-                    
-                    if(!shadowAnimator.isAnimating())
-                    {
-                        if(midTime)
-                        {
-                            displaySimMenuItems();
-                            
-                            if(c2Time)
-                            {
-                                displayCentralSimMenuItems();
-                                switch (simulationSelection)
-                                {
-                                    case MID_SELECTION:
-                                        goMidContactPoint();
-                                        break;
-                                    case C1_SELECTION:
-                                        goC1ContactPoint();
-                                        break;
-                                    case C2_SELECTION:
-                                        goC2ContactPoint();
-                                        break;
-                                    case C3_SELECTION:
-                                        goC3ContactPoint();
-                                        break;
-                                    case C4_SELECTION:
-                                        goC1ContactPoint();
-                                    default:
-                                        goMidConactPoint();
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                               switch (simulationSelection)
-                                {
-                                    case MID_SELECTION:
-                                        goMidContactPoint();
-                                        break;
-                                    case C1_SELECTION:
-                                        goC1ContactPoint();
-                                        break;
-                                    case C4_SELECTION:
-                                        goC1ContactPoint();
-                                    default:
-                                        goMidContactPoint();
-                                        break;
-                                } 
-                            }
-                        }
-                        else
-                        {
-                            noSimEclipse();
-                        }
-                    }
+                    setSimMenuOverFlow();                    
                 }
                 else
                 {
@@ -1424,8 +792,9 @@ class EclipseUI
             positionWatch.setPositionCall(onPosition);
             positionWatch.setErrorCall(onPositionError);
             
-            locationIcon.click(function()
+            locationIconButton.click(function()
             {
+                console.log("Location icon clicked.");
                 if(positionWatch.isOn())
                 {
                     setLocationMode(false);
@@ -1437,7 +806,7 @@ class EclipseUI
             });
             
             jMap.longPress(onToggleClick);
-            
+                        
             // Prevents long press / right click context menus.
             window.oncontextmenu = function(event) 
             {
@@ -1533,7 +902,7 @@ class EclipseUI
                 findNextEclipse();
             });
             
-            timeID.click(function(event)
+            timeButton.click(function(event)
             {
                if(dateOffset !== 0)
                {
@@ -2148,12 +1517,14 @@ class EclipseUI
             
             if(material.toggleHeaderFooter())
             {
+                main.removeClass("eclipse-main-expand");
                 mapSection.removeClass("eclipse-section-expand");
                 mapButtons.addClass("eclipse-map-button-placement-transition");
                 zoomButtons.addClass("eclipse-zoom-button-placement-transition");
             }
             else
             {
+                main.addClass("eclipse-main-expand");
                 mapButtons.removeClass("eclipse-map-button-placement-transition");
                 zoomButtons.removeClass("eclipse-zoom-button-placement-transition");
                 mapSection.addClass("eclipse-section-expand");
@@ -3027,6 +2398,11 @@ class EclipseUI
             killAnimateWorker();
             penumbraShadow = map.removeFeature(penumbraShadow);
             umbraShadow = map.removeFeature(umbraShadow);
+            
+            if(material.getCurrentPageIndex() === SIM_PAGE_IDX)
+            {
+                setSimMenuOverFlow();
+            }
             console.log("Animation stopped.");
         }
         

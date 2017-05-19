@@ -503,6 +503,11 @@ class MaterialAddons
             }
         };
         
+        this.getCurrentPageIndex = function()
+        {
+            return getCurrentPageIndex();
+        };
+        
         this.getHeaderHeight = function()
         {
             if(zeroHeaderFooter)
