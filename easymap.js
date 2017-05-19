@@ -801,6 +801,7 @@ class EasyMap
         {
             mapIsOnline = true;
             this.setSource(EasyMap.ONLINE_MAP);
+            maxZoom = 20;
         };
         
         /*
