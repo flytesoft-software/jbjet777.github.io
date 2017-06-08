@@ -940,7 +940,6 @@ function PlanetPositionsAC()
     function getEpochDay(/* Date */ inDate)
     {
         // var now = new Date().getTime() / 86400000 + 2440587.5; // Julian day
-        var epochDate = new Date(Date.UTC(2000, 0, 0, 0, 0, 0));
         // var days = inDate.getTime() - epochDate.getTime();
         var days = inDate.getTime() / 86400000 - 10956;
         
@@ -950,8 +949,6 @@ function PlanetPositionsAC()
         console.log("Delta T: " + deltaT);
         
         deltaT /= 86400.0; // deltaT in days;
-        
-        // days /= 86400000.0;
         
         days += 1 * deltaT;
           
@@ -1140,8 +1137,9 @@ function PlanetPositionsAC()
         
         HA = getHourAngle(SA, topRA);
                      
-        while(i < 1)
+        while(i < 7)
         {
+           
             ppar = getPlanetParallax(topR);
             
             /***
@@ -1156,8 +1154,8 @@ function PlanetPositionsAC()
             
             U = atan(EarthEllipsoid * tan(lat));
 
-            rhoSinO = EarthEllipsoid * sin(U) + ((elevation / 6378149.0) * sin(gclat));
-            rhoCosO = cos(U) + (elevation / 6378149.0 * cos(gclat));
+            rhoSinO = EarthEllipsoid * sin(U) + ((elevation / 6378149.0) * sin(lat));
+            rhoCosO = cos(U) + (elevation / 6378149.0 * cos(lat));
 
             // delta_ra = atan2(-rhoCosO * sin(ppar) * sin(HA), cos(decl) - rhoCosO * sin(ppar) * cos(HA));
             // new_decl = atan2((sin(decl) - rhoSinO * sin(ppar)) * cos(delta_ra), cos(decl) - rhoCosO * sin(ppar) * cos(HA));
@@ -1336,8 +1334,9 @@ function PlanetPositionsAC()
      */
     function getSolarSiderealAngle(/* Number */ longitude)
     {
-        var correct_day = day - 2.0 * deltaT;
+        var utc_hours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
         
+        /**
         var utc_hours = 0.0;
         
         if(day >= 0.0)
@@ -1353,14 +1352,12 @@ function PlanetPositionsAC()
         {
             utc_hours -= 24.0;
         }
-        
+        ***/
        
         var deg = rev(100.46061837 + (36000.770053608 * T) + (0.000387933 * T2) - (T3 / 38710000.0));
       
         var newSideAngle = rev(deg + longitude + (utc_hours * 15.0));
         
-        console.log("TEST SIDE ANGLE");
-       
         return newSideAngle;
     }
     
@@ -2243,7 +2240,7 @@ function PlanetPositionsAC()
         
         console.log("Getting Moon position.");
         
-        if(emphData)
+        if(false)
         {
             var newEclipCoords =  {
             x: polySolution(julianDay + 2.0 * deltaT, emphData.moonX),
@@ -2320,7 +2317,7 @@ function PlanetPositionsAC()
             this.setDate(new Date());
         }
         
-        if(emphData)
+        if(false)
         {
             var sunEclipCoords =  {
             x: polySolution(julianDay + 2.0 * deltaT, emphData.sunX),

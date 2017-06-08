@@ -142,6 +142,26 @@ jQuery.fn.extend(
         return $(this).on("transitionend", callback);
     },
     
+    transitionEndOff: function(callback)
+    {
+        return $(this).off("transitionend", callback);
+    },
+    
+    transitionOrAnimation: function(callback)
+    {
+        return $(this).on("transitionend animationend", callback);
+    },
+    
+    transitionOrAnimationOff: function(callback)
+    {
+        return $(this).off("transitionend animationend", callback);
+    },
+    
+    transitionOrAnimationOne: function(callback)
+    {
+        return $(this).one("transitionend animationend", callback);
+    },
+    
     touchStart: function(callback) 
     {
         return $(this).on("touchstart mousedown", callback);

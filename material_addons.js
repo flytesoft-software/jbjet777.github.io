@@ -13,9 +13,11 @@ class MaterialAddons
         var DRAWER_SWIPE_TRIGGER = 0.15;
         var TAB_SWIPE_TRIGGER = 0.5;
         
-        var layOut = document.querySelector('.mdl-layout');;
-        var mainPage = $("main");
+        // var layOut = document.querySelector('.mdl-layout');
+        var layOut = document.querySelector('#main-content');
+        var mainPage = $("#app-content");
         var header = $("header");
+        var tableBar = $("#table-bar");
         var footer = $("footer");
         
         var privPages = $("section");    
@@ -42,6 +44,7 @@ class MaterialAddons
         
         var windowResizeFunc = null;
         var changePageFunc = null;
+        var beforePageChangeFunc = null;
         
         mdlFinishedUpgrades();
         addCustomScroller();
@@ -87,8 +90,10 @@ class MaterialAddons
             {
                 if(!ignorePageChange)
                 {
-                    mainPage.animationEndOne(function(event)
-                    {   
+                    onBeforePageChange(event);
+                    var changePageCapture = window.setTimeout(function()
+                    {
+                        privPages.transitionOrAnimationOff();
                         pageIndex = idx;
                         checkIfDisabled();
                         if(changePageFunc)
@@ -96,11 +101,34 @@ class MaterialAddons
                             event.currentPageIdx = idx;
                             changePageFunc(event);
                         }
-                    }); 
+                        console.log("No page change animation called.");
+                    }, 500);
+                    
+                    privPages.transitionOrAnimationOne(function()
+                    {
+                        window.clearTimeout(changePageCapture);
+                        privPages.transitionOrAnimationOff();
+                        pageIndex = idx;
+                        checkIfDisabled();
+                        if(changePageFunc)
+                        {
+                            event.currentPageIdx = idx;
+                            changePageFunc(event);
+                        }
+                        console.log("Section transistion or animation called.");
+                    });
                 }                
             }
             
             ignorePageChange = false;
+        }
+        
+        function onBeforePageChange(event)
+        {
+            if(beforePageChangeFunc)
+            {
+                beforePageChangeFunc(event);
+            }
         }
         
         function checkIfDisabled()
@@ -199,6 +227,7 @@ class MaterialAddons
                                 nextPage.addClass("eclipse-content-swipe-in-right");
                                 ignorePageChange = true;
                                 privTabs[pageIndex - 1].click();
+                                onBeforePageChange(event);
                                 nextPage.animationEndOne(function (event)
                                 {
                                     nextPage.removeClass("eclipse-content-swipe-in-right");
@@ -237,6 +266,7 @@ class MaterialAddons
                             nextPage.addClass("eclipse-content-swipe-in-left");
                             ignorePageChange = true;
                             privTabs[pageIndex + 1].click();
+                            beforePageChangeFunc(event);
                             nextPage.animationEndOne(function(event)
                             {                            
                                 nextPage.removeClass("eclipse-content-swipe-in-left");
@@ -282,6 +312,7 @@ class MaterialAddons
         
         function showHeaderFooter()
         {
+            footer.show();
             if(!header.hasClass("eclipse-header-transition"))
             {
                 header.addClass("eclipse-header-transition");
@@ -290,8 +321,8 @@ class MaterialAddons
             {
                 footer.addClass("eclipse-footer-transition");
             }
-                        
-            zeroHeaderFooter = false;
+            footer.transitionEndOff();            
+            zeroHeaderFooter = false;            
             if(headerChangeCallBack)
             {
                 footer.transitionEndOne(headerChangeCallBack);
@@ -305,13 +336,21 @@ class MaterialAddons
             {
                 headerChangeCallBack();
             }
+            
+            footer.transitionEndOff();
+            footer.transitionEndOne(function(event)
+            {
+                console.log("Footer change.");
+                footer.hide();                
+            });
+            
             header.removeClass("eclipse-header-transition");
             footer.removeClass("eclipse-footer-transition");
         }
         
         function initDrawerButtonUpgrades()
         {
-            drawerButton =  $("div.mdl-layout__drawer-button");
+            drawerButton =  $("#main-header").children("div.mdl-layout__drawer-button");
             drawerButton.addClass("eclipse-drawer-button");
         }
         
@@ -407,6 +446,7 @@ class MaterialAddons
                                     nextPage.addClass("eclipse-content-swipe-in-left");
                                     ignorePageChange = true;
                                     privTabs[idx].click();
+                                    onBeforePageChange(event);
                                     nextPage.animationEndOne(function(event)
                                     {                            
                                         nextPage.removeClass("eclipse-content-swipe-in-left");
@@ -439,6 +479,7 @@ class MaterialAddons
                                     nextPage.addClass("eclipse-content-swipe-in-right");
                                     ignorePageChange = true;
                                     privTabs[idx].click();
+                                    onBeforePageChange(event);
                                     nextPage.animationEndOne(function (event)
                                     {
                                         nextPage.removeClass("eclipse-content-swipe-in-right");
@@ -513,7 +554,9 @@ class MaterialAddons
             if(zeroHeaderFooter)
                 return 0;
             
-            return header.outerHeight(true);
+            var barHeight = tableBar.outerHeight(true) / 2;
+            
+            return (header.outerHeight(true) + barHeight);
         };
         
         this.getFooterHeight = function()
@@ -581,6 +624,21 @@ class MaterialAddons
             }
         };
         
+        this.onBeforePageChange = function(func)
+        {
+            if(func)
+            {
+                if(typeof(func) === 'function')
+                {
+                    beforePageChangeFunc = func;
+                }
+            }
+            else
+            {            
+                throw "Invalid input to onPageChange.";
+            }
+        };
+        
         /* Show or hides the header and footer, returns false if removed, else true.
          * @returns {Boolean}
          */
@@ -624,6 +682,11 @@ class MaterialAddons
         {
             spinner.removeClass("is-active");
             spinner.addClass("zero-height");
+        };
+        
+        this.isHeaderFooterShown = function()
+        {
+            return !zeroHeaderFooter;            
         };
         
         /* Tests whether the app drawer is open/visible.
@@ -815,6 +878,7 @@ class DialogBox
         
         function resetState()
         {
+            dialog.css("background-color", "white");
             diagTitle.html("Error");
             diagDescription.html("An error occured.");
             okButton.html("OK");
@@ -852,6 +916,11 @@ class DialogBox
         this.hideCloseButton = function()
         {
             closeButton.hide();
+        };
+        
+        this.show = function()
+        {
+            dialog[0].show();
         };
         
         this.showModal = function()

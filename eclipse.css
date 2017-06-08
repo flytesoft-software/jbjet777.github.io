@@ -199,7 +199,7 @@ and open the template in the editor.
     right: 0 !important;
     z-index: 1 !important;
     
-    transition-property: bottom;
+    transition-property: all;
     transition-duration: .4s;
     transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
     transition-delay: .2s;
@@ -348,14 +348,14 @@ and open the template in the editor.
 
 .eclipse-map-button-pad
 {
-    padding: 1em;
+    padding: 0.5em;
 }
 
 .eclipse-map-button-placement
 {
     z-index: 9999;
-    position: fixed;
-    bottom: 28%;
+    position: absolute;
+    bottom: 12em;
     right: -15vw;
     
     transition-property: all;
@@ -367,13 +367,14 @@ and open the template in the editor.
 
 .eclipse-map-button-placement-transition
 {
-    right: 10vw;
+    right: 3em;
 }
 
 .eclipse-zoom-button-placement
 {
-    z-index: 9999;
-    position: fixed;
+    visibility: hidden;
+    z-index: -1;
+    position: absolute;
     top: 8.2em;
     left: -15vw;
     
@@ -385,24 +386,25 @@ and open the template in the editor.
 
 .eclipse-zoom-button-placement-transition
 {
-    left: 2vw;
+    visibility: visible;
+    z-index: 9999;
+    top: .5em;
+    left: .5em;;
 }
 
 .eclipse-offline-button-placement
 {
     z-index: 9999;
     position: fixed;
-    bottom: 18%;
-    right: 10vw;
     opacity: 0;
     visibility: hidden;
     
     transition-property: all;
-    transition-duration: .3s;
+    transition-duration: .7s;
     transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
     transition-delay: .1s;
     
-    transform: translateX(50%) translateY(50%);
+    transform: translateX(.25em) translateY(-.75em);
 }
 
 .eclipse-offline-button-placement-transition
@@ -422,7 +424,7 @@ and open the template in the editor.
 {
     height: 100vh;
     top: 0 !important;
-    position: fixed;
+    position: relative;
 }
 
 .eclipse-drawer-button
@@ -523,6 +525,7 @@ and open the template in the editor.
 
 @media only screen and (min-width: 560px) 
 {
+    /***
     .eclipse-map-button-placement
     {
         z-index: 9999;
@@ -539,7 +542,7 @@ and open the template in the editor.
 
     .eclipse-map-button-placement-transition
     {
-        right: 10vw;
+        right: 4em;
     }
     
     .eclipse-offline-button-placement
@@ -547,7 +550,7 @@ and open the template in the editor.
         z-index: 9999;
         position: fixed;
         bottom: 5.2em;
-        right: 10vw;
+        right: 4em;
         opacity: 0;
         visibility: hidden;
 
@@ -564,6 +567,7 @@ and open the template in the editor.
         visibility: visible;
         opacity: 1;
     }
+    ****/
 
    .eclipse-map-search-button
     {
@@ -602,7 +606,25 @@ and open the template in the editor.
         transition-duration: .3s;
         transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
         transition-delay: .1s;
-    }   
+    }
+    
+    .eclipse-show-circumstances-horizontal
+    {
+        top: -5em !important;
+        display: block !important;
+        position: absolute;
+        background-color: transparent;
+        width: 100%;
+        left: 0 !important;
+        width: 30%;   
+    }
+
+    .eclipse-map-circumstances-horizontal
+    {
+        width: 70%;
+        left: 30%;
+        position: absolute;        
+    }
     
 }
 
@@ -704,7 +726,7 @@ and open the template in the editor.
 
 .eclipse-sim-info-trans
 {
-    visibility: visible !important;
+    visibility: visible;
     top: 1%;
 }
 
@@ -716,11 +738,100 @@ and open the template in the editor.
     width: 100vw;
 }
 
-.simulation-content
+.eclipse-card-text-hide
+{
+    height: 0;
+    padding: 0;
+    
+    transition-property: all;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.eclipse-open-line-height
+{
+    line-height: 1.5;
+}
+
+.eclipse-card-text-show
+{
+    height: 100%;
+    padding: 1em;
+}
+
+.eclipse-simulation-content
 {
     background: blue;
-    height: 100%;
     overflow: hidden;
+}
+
+.eclipse-simulaton-content-fill
+{
+    height: 100%;
+    width: 100%;
+}
+
+.eclipse-simulation-map-show
+{
+    width: 100%;
+    display: block !important;
+    position: absolute;
+    background-color: transparent;
+    top: calc(-80vh + 7em);
+    left: calc(0vw - 3em);
+    transform: translate(50%, 50%) scale(0.2, 0.2)
+}
+
+@media only screen and (min-width: 350px) 
+{
+    .eclipse-simulation-map-show
+    {
+        width: 100%;
+        display: block !important;
+        position: absolute;
+        background-color: transparent;        
+        top: calc(-80vh + 5em);
+        left: calc(0vw - 3em);
+        transform: translate(50%, 50%) scale(0.2, 0.2)
+    }
+}
+
+@media only screen and (min-width: 1000px) 
+{
+    .eclipse-simulation-map-show
+    {
+        width: 100%;
+        display: block !important;
+        position: absolute;
+        background-color: transparent;
+        top: calc(-80vh - 1em);
+        left: calc(0vw - 5em);
+        transform: translate(50%, 50%) scale(0.2, 0.2)
+    }
+}
+
+.eclipse-simulation-map-show-horizontal
+{
+    width: 100%;
+    display: block !important;;
+    position: absolute;
+    background-color: transparent;
+    top: calc(-80vh + 9em);
+    left: calc(0vw - 1.5em);
+    transform: translate(50%, 50%) scale(0.2, 0.2);
+}
+
+.eclipse-simulation-map-show-horizontal-tablet
+{
+    width: 100%;
+    display: block !important;;
+    position: absolute;
+    background-color: transparent;
+    top: calc(-80vh + 6em);
+    left: calc(0vw - 3.5em);
+    transform: translate(50%, 50%) scale(0.2, 0.2);
+
 }
 
 .loading-spinner
@@ -765,4 +876,207 @@ and open the template in the editor.
 .eclipse-moon-visible
 {
     visibility: visible !important;    
+}
+
+.eclipse-card-background
+{
+    color: #fff;
+    height: 10em;
+    background: url('images/ec-icon-wide-cut.png') center / cover;
+}
+
+.eclipse-circumstance-page
+{
+    padding: 0.3em;
+}
+
+.eclipse-drawer-font
+{
+    font-size: 1.15em;
+}
+
+.eclipse-circumstance-content
+{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: 100vh;
+}
+
+.eclipse-circumstance-bottom-content
+{  
+    overflow: hidden;
+    overflow-y: auto; 
+    z-index: 9999;
+}
+
+.eclipse-show-circumstances-vertical
+{
+    top: 25% !important;
+    display: block !important;
+    position: absolute;
+    background-color: transparent;
+    width: 100%;
+    left: 0 !important;
+   
+}
+
+.eclipse-show-circumstances-vertical-clean
+{
+    top: 40% !important;
+    display: block !important;
+    position: absolute;
+    background-color: transparent;
+    width: 100%;
+    left: 0 !important;
+   
+}
+
+.eclipse-show-circumstances-horizontal
+{
+    top: -5em !important;
+    display: block !important;
+    position: absolute;
+    background-color: transparent;
+    width: 100%;
+    left: 0 !important;
+    width: 50%;   
+}
+
+.eclipse-map-circumstances-horizontal
+{
+    width: 50%;
+    left: 50%;
+    position: absolute;        
+}
+
+.eclipse-show-circumstances-vertical-trans
+{
+    top: 0;
+    transition-property: all;
+    transition-duration: 0.3s;
+    transition-timing-function: linear;
+    transition-delay: .1s;
+}
+
+.eclipse-move-eclipse-type
+{
+    height: .11em;
+    padding: 0;
+    padding-right: 1em;
+    font-size: 1em;
+    float: right;
+    bottom: -4.75em;
+    position: relative;
+    z-index: 9999;
+    transform: translateX(2.2em);
+    
+    transition-property: top, left, height, position, bottom, float;
+    transition-duration: 1s;
+    transition-timing-function: linear;
+    transition-delay: .1s;
+}
+
+@media only screen and (max-width: 340px) and (orientation: portrait) 
+{
+   .eclipse-move-eclipse-type
+    {
+        height: .11em;
+        padding: 0;
+        padding-right: 1em;
+        font-size: 1em;
+        float: right;
+        bottom: -4.75em;
+        position: relative;
+        z-index: 9999;
+        transform: translateX(2.85em);
+
+        transition-property: top, left, height, position, bottom, float;
+        transition-duration: 1s;
+        transition-timing-function: linear;
+        transition-delay: .1s;
+    } 
+}
+
+@media only screen and (max-width: 700px) and (orientation: landscape) 
+{
+   .eclipse-move-eclipse-type
+    {
+        height: .11em;
+        padding: 0;
+        padding-right: 1em;
+        font-size: 1em;
+        float: right;
+        bottom: -4.75em;
+        position: relative;
+        z-index: 9999;
+        transform: translateX(2.85em);
+
+        transition-property: top, left, height, position, bottom, float;
+        transition-duration: 1s;
+        transition-timing-function: linear;
+        transition-delay: .1s;
+    } 
+}
+
+.material-check-box-menu
+{    
+    top: -0.9em;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.87);
+    padding-right: 1em;
+}
+
+.material-other-page-header
+{
+    background-color: darkcyan;
+}
+
+.material-background-color
+{
+    background-color: #fafafa;
+}
+
+.material-other-page
+{    
+    z-index: 9999;
+    visibility: hidden;
+    height: 0;
+    width: 100vw;
+    position: absolute;
+    background: white;
+    bottom: -100vh;
+    
+    transition-property: bottom, visibility;
+    transition-duration: .3s;
+    transition-timing-function: cubic-bezier(0.35, 0, 0.25, 1);
+    transition-delay: .1s;
+}
+
+.material-other-page-show
+{
+    visibility: visible;
+    bottom: 0;
+}
+
+.material-about-cards
+{    
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+}
+
+.material-drawer-icon
+{    
+    transform: translateY(-.1em);
+    padding-right: 1em;
+    color: cadetblue;
+}
+
+
+.about-content
+{
+    padding-top: 1em;
+    padding-bottom: 1em;
 }

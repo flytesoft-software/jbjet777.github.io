@@ -172,21 +172,22 @@ class EclipseUI
 {
     constructor()
     {
-        var MAP_PAGE_IDX = 1;
-        var SIM_PAGE_IDX = 2;
-        var TOAST_TIMEOUT = 2000;
-        var TIME_LOCALE = "en-US";
-        var LINE_COUNT = 7;
-        var DATE_OPTIONS = {timeZone: "UTC", year: "numeric", month: "long", day: "numeric"};
-        var MAP_OPTIONS = {zoomControl: false, worldCopyJump: true};   // TODO: Turn on world copy jump, does not work properly as of Leaflet 1.0.2
-        var STARTING_COORDS = {latitude: 34, longitude: -118, altitude: 0};
-        var LOCATION_MARKER_URL = 'images/loc24.png';
+        const MAP_PAGE_IDX = 1;
+        const SIM_PAGE_IDX = 2;
+        const TOAST_TIMEOUT = 2000;
+        const TIME_LOCALE = "en-US";
+        const LINE_COUNT = 7;
+        const DATE_OPTIONS = {timeZone: "UTC", year: "numeric", month: "long", day: "numeric"};
+        const STARTING_COORDS = {latitude: 34, longitude: -118, altitude: 0};
+        const LOCATION_MARKER_URL = 'images/loc24.png';
+        const DIRTY_MAP_SPILT = 0.75;
+        const CLEAN_MAP_SPLIT = 0.5;
         
-        var MID_SELECTION = 0;
-        var C1_SELECTION = 1;
-        var C2_SELECTION = 2;
-        var C3_SELECTION = 3;
-        var C4_SELECTION = 4;
+        const MID_SELECTION = 0;
+        const C1_SELECTION = 1;
+        const C2_SELECTION = 2;
+        const C3_SELECTION = 3;
+        const C4_SELECTION = 4;
         
         var simulationSelection = MID_SELECTION;
         
@@ -224,6 +225,7 @@ class EclipseUI
         
         var moonPos = 0;
         var sunPos = 0;
+        var sunMoonSizeRatio = 1;
         
         var selectedEclipse = -1;
         var nextVisibleEclipse = -1;
@@ -233,7 +235,8 @@ class EclipseUI
         var tempIgnoreOfflineMap = false;
                
         var jMap = $("#map");
-        var main = $("main");       
+        var circumstances = $("#circumstances");
+        var main = $("#app-content");       
         var simulationTab = $("#simulation-tab");
         var sun = $("#sun");
         var moon = $("#moon");
@@ -251,6 +254,13 @@ class EclipseUI
         var zoomButtons = $("#zoom-buttons");
         var mapOfflineButton = $("#map-offline-button");
         var timeButton = $("#time-button");
+        var aboutLink = $("#about-link");
+        var aboutPage = $("#about-page");
+        var aboutBackButton = $("#about-back-button");
+        var showExtras = $("#show-extras");
+        var showExtraCheck = showExtras.children("label").children("input");
+        var circumstanceTab = $("#circumstances-tab");
+        var eclipseTypeHeader = $("#eclipse-type-header");
         
         /* Map/Sim Menu */
         var mapMenuButton = $("#map-menu-button");
@@ -289,6 +299,7 @@ class EclipseUI
         
         var statsBlock = $("#stats_block");
         var timeBlock = $("#time_block");
+        var timeBlock2 = $("#time_block2");
         var notVisibleID = $("#not_visible");
         
         var eclipsePicID = $("#eclipse_pic");
@@ -336,12 +347,25 @@ class EclipseUI
         var typeStartID = $("#type_div_start");
         var typeEndID = $("#type_div_ends");
         /* Eclipse STATS IDs END */
-                
+         
+        /* FOORTER IDs */
         var latID = $("#lat");
         var longID = $("#long");
         var altID = $("#alt");
         var timeID = $("#time");
         var zoneID = $("#zone");
+        /* FOOTER IDs END */
+        
+        /* ABOUT IDs */
+        var helpInfo = $("#help-info");
+        var moreInfo = $("#more-info");
+        var disclaimer = $("#disclaimer");
+        var disclaimerText = $("#disclaimer-text");
+        var privacy =$("#privacy");
+        var privacyText = $("#privacy-text");
+        var openSource = $("#open-source");
+        var openSourceText = $("#open-source-text");
+        /* ABOUT IDs END */
         
         /* Map Poly Lines */
         var centralLine = map.addMultiPolyLine();
@@ -363,10 +387,7 @@ class EclipseUI
         var penumbraShadow = null;
         /* Map Shadow Polygons END */
         
-        var headerHeight = material.getHeaderHeight();
-        var footerHeight = material.getFooterHeight();
-        var screenHeight = $(window).height();
-        var mapHeight = screenHeight - headerHeight - footerHeight;
+        
         
         updateCountDowns();
         latID.html(currentCoords.latitude.toFixed(2));
@@ -380,15 +401,14 @@ class EclipseUI
         var lineWorkers = new LineWorkers(onEclipseLinesUpdate);
         var lineCount = 0;
         
-        jMap.height(mapHeight);
-        
-        updateSimMetrics(mapHeight);
         
         calculateWorker.postMessage({'cmd': 'coords', 'coords': JSON.stringify(currentCoords)});
         
         var locationMarker = map.addMarker(currentCoords, LOCATION_MARKER_URL);
         
         setLocation(currentCoords);
+        
+        setPageHeights();
         
         function resetMenu()
         {
@@ -398,46 +418,81 @@ class EclipseUI
             }, 500);
         }
         
-        function radToDeg(angleRad)
+        function getScreenHeight()
         {
-            if (isNaN(angleRad))
-            {
-                console.log("RAD NAN");
-                return 0.0;
-            }
-            return (180.0 * angleRad / Math.PI);
+            var screenHeight = $(window).height();
+            
+            return screenHeight;
         }
-
-        function degToRad(angleDeg)
+        
+        function getScreenWidth()
         {
-            if (isNaN(angleDeg))
-            {
-                console.log("DEG NAN");
-                return 0.0;
-            }
-            return (Math.PI * angleDeg / 180.0);
+            return $(window).width();
         }
-
-        function sin(/* Number */ deg)
-        {
-            var ans = Math.sin(degToRad(deg));
-            if (isNaN(ans))
-            {
-                console.log("SIN NAN");
-                return 0.0;
-            }
-            return ans;
+        
+        function getContentHeight()
+        {            
+            var headerHeight = material.getHeaderHeight();
+            var footerHeight = material.getFooterHeight();
+            var screenHeight = getScreenHeight();
+            var contentHeight = screenHeight - headerHeight - footerHeight;
+            
+            return contentHeight;
         }
-
-        function cos(/* Number */ deg)
+        
+        function setPageHeights()
         {
-            var ans = Math.cos(degToRad(deg));
-            if (isNaN(ans))
+            var contentHeight = getContentHeight();
+            var screenHeight = getScreenHeight();
+            
+            
+            circumstances.height(contentHeight);
+            var timeBlockTop = timeBlock.offset().top;
+             var circumstancesTop = circumstances.offset().top;
+             var minHeight =  timeBlockTop + circumstancesTop;
+            
+            var top = $("#top").height();
+            var bottom = $("#bottom").height();
+            
+            console.log("Top height: " + top);
+            console.log("Bottom height: " + bottom);
+            console.log("Total height: " + (top + bottom));
+            console.log("Content height: " + contentHeight);
+            
+            if((top + bottom) <= (contentHeight + 1))
             {
-                console.log("COS NAN");
-                return 0.0;
+                minHeight = contentHeight;
             }
-            return ans;
+            else
+            {
+                minHeight = screenHeight;
+            }           
+            
+            
+            /***
+            if(screenHeight < 375)
+            {
+                minHeight += screenHeight - minHeight;
+            }
+            ***/
+           
+            circumstances.css("min-height", minHeight + "px");
+            updateSimMetrics(contentHeight);
+            
+            if(showExtraCheck.is(":checked")  && material.getCurrentPageIndex() === MAP_PAGE_IDX)
+            {
+                sunMoonSizeRatio = 0.2;
+                showMapExtras();
+            }
+            else
+            {
+                sunMoonSizeRatio = 1;
+                jMap.height(contentHeight);
+            
+                map.updateSize();
+            }
+            
+            console.log("Updated content sizes.");
         }
            
         function firstRun()
@@ -446,17 +501,30 @@ class EclipseUI
             {
                 window.localStorage.setItem(RUN_BEFORE, "true");
                 
-                var dialogBox = new DialogBox(  "Location Information Request",
-                                                "This app requires the use of location information, please enable this feature when prompted.");
+                var warningBox = new DialogBox(  "WARNING!!!",
+                                                "Never look at the Sun, eclipsed or not, without proper and certificated eye protection.  \n\
+                                                Looking at the Sun without such protection will result in permanent eye damage and possible blindness.  \n\
+                                                100% UVA/UVB sunglasses do <u>NOT</u> provide eye protection for looking at the Sun.");
                                                 
-                dialogBox.hideCloseButton();
-                dialogBox.setOKCallBack(function()
-                {
-                    setLocationMode(true);
-                });
+                warningBox.hideCloseButton();
                 
                 material.hideSpinner();
-                dialogBox.showModal();
+                
+                warningBox.setOKCallBack(function()
+                {
+                    var dialogBox = new DialogBox(  "Location Information Request",
+                                                "This app requires the use of location information, please enable this feature when prompted.");
+
+                    dialogBox.hideCloseButton();
+                    dialogBox.setOKCallBack(function()
+                    {
+                        setLocationMode(true);
+                    });
+
+                    dialogBox.showModal();
+                });
+                
+                warningBox.showModal();
             }
             else
             {
@@ -488,15 +556,20 @@ class EclipseUI
         function onMapDisplay()
         {
             console.log("Page change to map.");
-            headerHeight = material.getHeaderHeight();
-            footerHeight = material.getFooterHeight();
-            mapHeight = screenHeight - headerHeight - footerHeight;
-            jMap.height(mapHeight);
             material.disableYScroll();
             map.updateSize();
-            mapMenuButton.show();
-            mapSearchBoxID.show();
+            
+            if(map.isMapOnline())
+            {
+               mapSearchBoxID.show(); 
+            }
+            
+            mapMenuButton.show();            
             checkIfEclipseIsOccurring();
+            if(showExtraCheck.is(":checked"))
+            {
+                showMapExtras();
+            }
         }
         
         function isSmallScreen()
@@ -523,8 +596,8 @@ class EclipseUI
                 width = mapHeight;
             }
             
-            moon.width(width * .5);
-            moon.height(width * .5);
+            moon.width("100%");
+            moon.height("100%");
             sun.width(width * .5);
             sun.height(width * .5);            
         }
@@ -548,14 +621,19 @@ class EclipseUI
             thirdContactItem.show();
         }
         
+        function hideCentralSimMenuItems()
+        {
+            secondContactItem.hide();
+            thirdContactItem.hide();
+        }
+        
         function hideSimMenuItems()
         {
             globeMenuItem.show();
-            firstContactItem.hide();
-            secondContactItem.hide();
-            midEclipseItem.hide();
-            thirdContactItem.hide();
+            firstContactItem.hide();            
+            midEclipseItem.hide();           
             fourthContactItem.hide();
+            hideCentralSimMenuItems();
         }
         
         function setSimMenuOverFlow()
@@ -591,6 +669,7 @@ class EclipseUI
                         }
                     } else
                     {
+                        hideCentralSimMenuItems();
                         switch (simulationSelection)
                         {
                             case MID_SELECTION:
@@ -616,6 +695,10 @@ class EclipseUI
         function setOfflineMap()
         {
             map.setOfflineMap();
+            if (MAP_PAGE_IDX === material.getCurrentPageIndex())
+            {
+                mapSearchBoxID.hide(); 
+            }
             
             if(!mapOfflineButton.hasClass("eclipse-offline-button-placement-transition"))
             {
@@ -627,7 +710,180 @@ class EclipseUI
         function setOnlineMap()
         {
             map.setOnlineMap();
+            if (MAP_PAGE_IDX === material.getCurrentPageIndex())
+            {
+                mapSearchBoxID.show(); 
+            }
             mapOfflineButton.removeClass("eclipse-offline-button-placement-transition");
+        }
+        
+        function collapseAboutPageSections()
+        {
+            disclaimerText.removeClass("eclipse-card-text-show");
+            privacyText.removeClass("eclipse-card-text-show");
+            openSourceText.removeClass("eclipse-card-text-show");
+        }
+        
+        function showMapExtras()
+        {
+            var screenWidth =  getScreenWidth();
+            var contentHeight = getContentHeight();
+            var circumstanceHeight = contentHeight;
+            var screenHeight = getScreenHeight();
+            var mapHeight = contentHeight;
+            var updateImmediately = false;
+            var vertical = false;
+            const TABLE_PADDING = 6; 
+            
+            console.log("Map extras shown.");
+            
+            if(!circumstanceTab.hasClass("eclipse-show-circumstances-vertical") &&
+                   !circumstanceTab.hasClass("eclipse-show-circumstances-horizontal") &&
+                        !circumstanceTab.hasClass("eclipse-show-circumstances-vertical-clean"))
+            {
+               eclipseTypeHeader.css("visibility", "hidden");
+               updateImmediately = true;
+            }
+            
+            if( screenHeight > screenWidth)
+            {
+                vertical = true;
+                if(circumstanceTab.hasClass("eclipse-show-circumstances-vertical") || circumstanceTab.hasClass("eclipse-show-circumstances-vertical-clean"))
+                {
+                    updateImmediately = true;
+                }
+               
+                if(material.isHeaderFooterShown())
+                {
+                    circumstanceTab.removeClass("eclipse-show-circumstances-vertical-clean");
+                    circumstanceTab.addClass("eclipse-show-circumstances-vertical");
+                    circumstanceHeight *= 0.75;
+                }
+                else
+                {
+                    circumstanceTab.removeClass("eclipse-show-circumstances-vertical");
+                    circumstanceTab.addClass("eclipse-show-circumstances-vertical-clean");
+                    circumstanceHeight *= 0.6;
+                }
+                
+                
+                circumstanceTab.removeClass("eclipse-show-circumstances-horizontal");
+                jMap.removeClass("eclipse-map-circumstances-horizontal");
+                                
+                circumstances.height(circumstanceHeight);
+                circumstances.css("min-height", circumstanceHeight + "px");
+                simulationTab.removeClass("eclipse-simulation-map-show-horizontal");
+                simulationTab.removeClass("eclipse-simulation-map-show-horizontal-tablet");
+                        
+                simulationTab.addClass("eclipse-simulation-map-show");
+                localTimeDiv.css("left", "");
+                realTimeInfoID.css("left", "");
+                realTimeInfoID.css("transform", "");
+            }
+            else
+            {
+                if(circumstanceTab.hasClass("eclipse-show-circumstances-horizontal"))
+                {
+                    updateImmediately = true;
+                }
+                circumstanceTab.addClass("eclipse-show-circumstances-horizontal");
+                circumstanceTab.removeClass("eclipse-show-circumstances-vertical");
+                circumstanceTab.removeClass("eclipse-show-circumstances-vertical-clean");
+                jMap.addClass("eclipse-map-circumstances-horizontal");
+                circumstances.height("calc(" + circumstanceHeight + "px + 5em)");
+                circumstances.css("min-height", "calc(" + circumstanceHeight + "px + 5em)"); 
+                
+                simulationTab.removeClass("eclipse-simulation-map-show");
+                if(screenWidth < 1024)
+                {
+                    simulationTab.removeClass("eclipse-simulation-map-show-horizontal-tablet");
+                    simulationTab.addClass("eclipse-simulation-map-show-horizontal");
+                }
+                else
+                {
+                    simulationTab.removeClass("eclipse-simulation-map-show-horizontal");
+                    simulationTab.addClass("eclipse-simulation-map-show-horizontal-tablet");
+                }
+            }
+            
+            eclipseTypeHeader.addClass("eclipse-move-eclipse-type");
+            eclipseTypeID.hide();
+            eclipseDateID.hide(); 
+            
+            if(updateImmediately)
+            {
+                if(vertical)
+                {
+                    mapHeight = statsBlock.offset().top - material.getHeaderHeight() - TABLE_PADDING;
+                    mapButtons.css("bottom", "calc(" + (screenHeight - mapHeight) + "px - 2em)"); 
+                }
+                else
+                {
+                    mapHeight = contentHeight;
+                    mapButtons.css("bottom", "5em");
+                }
+                
+                jMap.height(mapHeight);
+                map.updateSize();                               
+            }
+            
+            sun.css("box-shadow", "8px 8px 8px 8px #888888");
+            updateMoonPosition();
+            
+            circumstanceTab.transitionEndOff(); // Make sure we clean up callbacks.
+            circumstanceTab.transitionEndOne(function()
+            {
+                var statsBlockOffset = statsBlock.offset().top;
+                var statsBlockNoPad = statsBlockOffset - 24;
+            
+                if(vertical)
+                {
+                    zuluTimeDiv.css("top", "calc(" + statsBlockNoPad + "px - 1.2em");
+                    localTimeDiv.css("top", "calc(" + statsBlockNoPad + "px - 1.2em");
+                
+                    mapHeight = statsBlockOffset - material.getHeaderHeight() - TABLE_PADDING;
+                    mapButtons.css("bottom", "calc(" + (screenHeight - mapHeight) + "px - 2em)");
+                }
+                else
+                {
+                    var statsBlockWidth = statsBlock.width();
+                    zuluTimeDiv.css("top", "");
+                    localTimeDiv.css("top", "");
+                    
+                    localTimeDiv.css("left", "calc(" + statsBlockWidth + "px + 3em");
+                    
+                    mapHeight = contentHeight;
+                    mapButtons.css("bottom", "5em");
+                    realTimeInfoID.css("left", "calc(" + statsBlockWidth + "px + 25%");
+                    realTimeInfoID.css("transform", "translateX(0%)");                    
+                }
+
+                jMap.height(mapHeight);
+                map.updateSize();
+                
+                eclipseTypeHeader.css("visibility", "");
+                console.log("Delayed map resize: " + mapHeight);
+            }); 
+        }
+        
+        function cleanUpMapExtras()
+        {
+            circumstanceTab.removeClass("eclipse-show-circumstances-vertical");
+            circumstanceTab.removeClass("eclipse-show-circumstances-vertical-clean");
+            circumstanceTab.removeClass("eclipse-show-circumstances-horizontal");
+            jMap.removeClass("eclipse-map-circumstances-horizontal");
+            eclipseTypeHeader.removeClass("eclipse-move-eclipse-type");
+            simulationTab.removeClass("eclipse-simulation-map-show");
+            simulationTab.removeClass("eclipse-simulation-map-show-horizontal");
+            simulationTab.removeClass("eclipse-simulation-map-show-horizontal-tablet");
+            zuluTimeDiv.css("top", "");
+            localTimeDiv.css("top", "");
+            localTimeDiv.css("left", "");
+            realTimeInfoID.css("left", "");
+            realTimeInfoID.css("transform", "");
+            eclipseTypeID.show();
+            eclipseDateID.show();
+            sun.css("box-shadow", "");
         }
                         
         function bindEvents()
@@ -635,6 +891,89 @@ class EclipseUI
             console.log("Binding Eclipse UI events.");
             
             window.setInterval(checkLocalTimeZone, 30000);
+            
+            helpInfo.click(collapseAboutPageSections);
+            
+            moreInfo.click(collapseAboutPageSections);
+            
+            showExtraCheck.click(function()
+            {
+                var box = $(this);
+                if(box.is(":checked"))
+                {
+                    console.log("Box is checked.");
+                    
+                }
+                else
+                {
+                    console.log("Box is not checked.");
+                    cleanUpMapExtras();
+                    mapButtons.css("bottom", ""); 
+                    sunMoonSizeRatio = 1;
+                }
+                setPageHeights();
+            });
+            
+            disclaimer.click(function()
+            {
+                openSourceText.removeClass("eclipse-card-text-show");
+                privacyText.removeClass("eclipse-card-text-show");
+                
+                if(!disclaimerText.hasClass("eclipse-card-text-show"))
+                {
+                    disclaimerText.addClass("eclipse-card-text-show");
+                }
+                else
+                {
+                    disclaimerText.removeClass("eclipse-card-text-show");
+                }
+            });
+            
+            privacy.click(function()
+            {
+                disclaimerText.removeClass("eclipse-card-text-show");
+                openSourceText.removeClass("eclipse-card-text-show");
+                
+                if(!privacyText.hasClass("eclipse-card-text-show"))
+                {
+                    privacyText.addClass("eclipse-card-text-show");
+                }
+                else
+                {
+                    privacyText.removeClass("eclipse-card-text-show");
+                }
+            });
+            
+            openSource.click(function()
+            {
+                disclaimerText.removeClass("eclipse-card-text-show");
+                privacyText.removeClass("eclipse-card-text-show");
+                
+                if(!openSourceText.hasClass("eclipse-card-text-show"))
+                {
+                    openSourceText.addClass("eclipse-card-text-show");
+                }
+                else
+                {
+                    openSourceText.removeClass("eclipse-card-text-show");
+                }                
+            });
+            
+            aboutLink.click(function()
+            {
+                aboutPage.height("100vh");
+                aboutPage.addClass("material-other-page-show");
+            });
+            
+            aboutBackButton.click(function()
+            {
+                aboutPage.removeClass("material-other-page-show");
+                aboutPage.transitionEndOne(function()
+                {
+                    aboutPage.height("0");
+                    collapseAboutPageSections();
+                });
+            });
             
             globeMenuItem.click(function()
             {
@@ -701,7 +1040,13 @@ class EclipseUI
             {
                console.log("App is online."); 
                setOnlineMap();
-            });            
+            });
+            
+            material.onBeforePageChange(function(event)
+            {
+                console.log("Before page change.");
+                cleanUpMapExtras();
+            });
             
             material.onPageChange(function (event)
             {
@@ -711,23 +1056,26 @@ class EclipseUI
                 mapSearchBoxID.hide();                
                 
                 material.enableYScroll();
-                hideMoon();
+                hideMoon();              
+               
+                setPageHeights();
+                
+                console.log("Removing contact point.");
+                contactPointID.css("visibility", "hidden");
                 
                 if (MAP_PAGE_IDX === event.currentPageIdx)
                 {
                     console.log("Map page displayed.");
-                    onMapDisplay();
+                    onMapDisplay();                   
                 }
                 else if (SIM_PAGE_IDX === event.currentPageIdx)
                 {
                     console.log("Simulation page displayed.");
-                    headerHeight = material.getHeaderHeight();
-                    footerHeight = material.getFooterHeight();
-                    mapHeight = screenHeight - headerHeight - footerHeight;
-                    updateSimMetrics(mapHeight);
+                    contactPointID.css("visibility", "");
                     material.disableYScroll();
                     mapMenuButton.show();
-                    setSimMenuOverFlow();                    
+                    setSimMenuOverFlow();
+                    updateMoonPosition();
                 }
                 else
                 {
@@ -831,25 +1179,19 @@ class EclipseUI
             material.onHeaderChange(function (event)
             {
                 console.log("Header change.");
-                headerHeight = material.getHeaderHeight();
-                footerHeight = material.getFooterHeight();
-                mapHeight = screenHeight - headerHeight - footerHeight;
-                jMap.height(mapHeight);
-                map.updateSize();
+                
+                setPageHeights();             
+                
             });
 
             material.onWindowResize(function (event)
             {
                 console.log("UI: Window height change.");
                 
-                headerHeight = material.getHeaderHeight();
-                footerHeight = material.getFooterHeight();
-                screenHeight = $(window).height();
-                mapHeight = screenHeight - headerHeight - footerHeight;
-                jMap.height(mapHeight);
-                map.updateSize();
-                updateSimMetrics(mapHeight);
+                setPageHeights();                
+                
                 updateMoonPosition();
+               
                 if(mapSearchInputID.is(":focus"))
                 {
                     if(isSmallScreen())
@@ -918,21 +1260,27 @@ class EclipseUI
             {
                 if(c1Time)
                 {
+                    dateOffset = 0;
+                    stopShadowAnimation();
                     dateOffset = c1Time.getTime() - (new Date().getTime());
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
-                    showToast("Time traveling to partial eclipse begins!");                    
+                    showToast("Time traveling to partial eclipse begins!");
+                    checkIfEclipseIsOccurring();
                 }
             });
             
             totalBeginsID.longPress(function(event)
             {
                 if(c2Time)
-                {                 
+                {  
+                    dateOffset = 0;
+                    stopShadowAnimation();
                     dateOffset = c2Time.getTime() - (new Date().getTime());
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to " + currentEclipseRef.type + " eclipse begins!");
+                    checkIfEclipseIsOccurring();
                 }
             });
             
@@ -940,10 +1288,13 @@ class EclipseUI
             {
                 if(midTime)
                 {
+                    dateOffset = 0;
+                    stopShadowAnimation();
                     dateOffset = midTime.getTime() - (new Date().getTime());
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to mid eclipse!");
+                    checkIfEclipseIsOccurring();
                 }                
             });
             
@@ -951,10 +1302,13 @@ class EclipseUI
             {
                 if(c3Time)
                 {
+                    dateOffset = 0;
+                    stopShadowAnimation();
                     dateOffset = c3Time.getTime() - (new Date().getTime());
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to " + currentEclipseRef.type + " eclipse ends!");
+                    checkIfEclipseIsOccurring();
                 }
             });
             
@@ -962,10 +1316,13 @@ class EclipseUI
             {
                if(c4Time)
                {
+                    dateOffset = 0;
+                    stopShadowAnimation();
                     dateOffset = c4Time.getTime() - (new Date().getTime());
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to end of eclipse!");
+                    checkIfEclipseIsOccurring();
                }
             });
             
@@ -1061,7 +1418,8 @@ class EclipseUI
             
             material.onMDLComplete(function()
             {
-                material.toggleHeaderFooter(true);
+                console.log("MDL Complete callback.");
+                material.toggleHeaderFooter(true);                
             });
             
             mapSearchInputID.focus(function(event)
@@ -1235,45 +1593,7 @@ class EclipseUI
         function findNextEclipse()
         {  
             updateSelectedEclipse(eclipseCatalog.getNextEclipseIdx());
-            console.log("Found next eclipse: " + selectedEclipse);
-                 
-           // TODO:
-            /***
-            getPosition();
-            coordInterval = setInterval(backGroundUpdate, UPDATE_INTERVAL);
-            buildEclipseList();
-            ***/
-           
-            /*** TODO: Highlight selected eclipse.
-            if (selected_eclipse < 0)
-            {
-                selected_eclipse = next_eclipse;
-            }
-
-            var eclipse_list_list_items = eclipse_list.children("li");
-            var next_eclipse_item = eclipse_list_list_items.eq(next_eclipse);
-            var selected_eclipse_item = eclipse_list_list_items.eq(selected_eclipse);
-
-            // next_eclipse_item.children("a").append("<span class='ui-li-count'>Next Eclipse</span>");
-            next_eclipse_item.append("<span class='ui-li-count'>Next Eclipse</span>");
-
-            eclipse_list.listview("refresh");
-            // selected_eclipse_item.children("a").addClass('ui-btn-b');	// Changes background color of "selected" eclipse.
-            selected_eclipse_item.removeClass('ui-body-inherit');
-            selected_eclipse_item.addClass('ui-body-b');
-            selected_eclipse_item.children("p").css("color", "white");
-            ***/
-
-            // TODO: Implement eclipse list click handlers
-            /****
-            eclipse_list_list_items.click(function (event)
-            {
-                onEclipseClicked(event, this);
-            });
-            ****/
-
-            // TODO: Call draw eclipse map function.
-            // drawEclipseMap();
+            console.log("Found next eclipse: " + selectedEclipse);          
         }
         
         function loadEclipseData()
@@ -1344,23 +1664,23 @@ class EclipseUI
                     lineCount++;
                     break;
                 case 'south_penumbra_line':
-                    southernPenumbraLine = map.addMultiPolyLine(data.line);
+                    southernPenumbraLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setSouthPenumbraLine(data.line);
                     lineCount++;
                     break;
                 case 'north_penumbra_line':
-                    northernPenumbraLine = map.addMultiPolyLine(data.line);
+                    northernPenumbraLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setNorthPenumbraLine(data.line);
                     lineCount++;
                     break;
                 case 'east_penumbra_line':                    
-                    eastEclipseLine = map.addMultiPolyLine(data.line);
+                    eastEclipseLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setEastLimitLine(data.line);
                     currentEclipseRef.setEastLineTimes(data.times);
                     lineCount++;
                     break;
                 case 'west_penumbra_line':
-                    westEclipseLine = map.addMultiPolyLine(data.line);
+                    westEclipseLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setWestLimitLine(data.line);
                     currentEclipseRef.setWestLineTimes(data.times);
                     lineCount++;
@@ -1521,6 +1841,15 @@ class EclipseUI
                 mapSection.removeClass("eclipse-section-expand");
                 mapButtons.addClass("eclipse-map-button-placement-transition");
                 zoomButtons.addClass("eclipse-zoom-button-placement-transition");
+                simulationTab.css("top", "");
+                localTimeDiv.css("bottom", "");
+                zuluTimeDiv.css("bottom", "");
+                realTimeInfoID.css("top", "");
+                
+                if(showExtraCheck.is(":checked"))
+                {
+                    showMapExtras();
+                }
             }
             else
             {
@@ -1528,6 +1857,16 @@ class EclipseUI
                 mapButtons.removeClass("eclipse-map-button-placement-transition");
                 zoomButtons.removeClass("eclipse-zoom-button-placement-transition");
                 mapSection.addClass("eclipse-section-expand");
+                
+                if(showExtraCheck.is(":checked"))
+                {
+                    showMapExtras();
+                }
+               
+                simulationTab.css("top", "calc(0px - 90vh)");
+                localTimeDiv.css("bottom", "0.2em");
+                zuluTimeDiv.css("bottom", "0.25em");
+                realTimeInfoID.css("top", "1em");
             }
         }
         
@@ -1612,6 +1951,7 @@ class EclipseUI
                 
                 statsBlock.show(0);
                 timeBlock.show(0);
+                timeBlock2.show(0);
                 notVisibleID.hide(0);
                 
                 eclipsePicID.css({ "background": "url('" + IMGS_FOLDER + eclipseStats.eclipseType.toLowerCase() + ".png')",
@@ -1705,10 +2045,14 @@ class EclipseUI
                         c3HorizID.hide(0);
                     }
                     
-                    displayCentralSimMenuItems();
+                    if(material.getPageIndex() === SIM_PAGE_IDX)
+                    {
+                        displayCentralSimMenuItems();
+                    }
                 } 
                 else
                 {
+                    hideCentralSimMenuItems();
                     c2Time = null;
                     c3Time = null;
                     c2CountID.html("");
@@ -1738,6 +2082,13 @@ class EclipseUI
                             break;
                     }
                 }
+                
+                if(material.getPageIndex() === SIM_PAGE_IDX)
+                {
+                    displaySimMenuItems();
+                }
+                
+                setPageHeights();
             } 
             else
             {
@@ -1752,6 +2103,7 @@ class EclipseUI
                 c4CountID.html("");
                 sunSetCountID.html("");
                 resetEclipseListStats();
+                setPageHeights();
             }
         }
         
@@ -1853,7 +2205,8 @@ class EclipseUI
         }
         
         function noSimEclipse()
-        {
+        {            
+            hideSimMenuItems();
            if(!contactPointID.hasClass("eclipse-sim-info-trans"))
             {
                 contactPointID.addClass("eclipse-sim-info-trans");
@@ -2004,6 +2357,7 @@ class EclipseUI
         {
             statsBlock.hide(0);
             timeBlock.hide(0);
+            timeBlock2.hide(0);
             eclipseTypeID.html("No Eclipse Occurs");
             notVisibleID.show(0);
             coverageID.html("0.0%");
@@ -2048,7 +2402,7 @@ class EclipseUI
             
             material.hideSpinner();
             jMap.show(); // Keep map from being displayed until loading is complete, otherwise it bleeds through during startup.
-            simulationTab.children(".simulation-content").show();
+            simulationTab.css("visibility", "");
             
             visibilityIcons = $(".visible-class");
             console.log("Icon count: " + visibilityIcons.length);
@@ -2416,23 +2770,35 @@ class EclipseUI
         function updateMoonPosition()
         {
             var displaySunWidth = sun.width();
+            
+            console.log("Sun width: " + displaySunWidth);
+            
             var moonPixelCenter = sun.offset();
             var moonWidth = displaySunWidth;
             
-            moonWidth = moonPos.diameter / sunPos.diameter * displaySunWidth;
+            moonWidth = moonPos.diameter / sunPos.diameter * 100;
             var pixelPerDeg = displaySunWidth / sunPos.diameter;
             
             var deltaDecl = moonPos.decl - sunPos.decl;
             var deltaRA = moonPos.ra - sunPos.ra;
            
            
-            moonPixelCenter.top = moonPixelCenter.top - ( (deltaDecl) * pixelPerDeg) - 1;  // For some reason there's a rounding issue here, this seems to help, not sure why.
-            moonPixelCenter.left = moonPixelCenter.left - ( (deltaRA) * pixelPerDeg);
+            // moonPixelCenter.top = moonPixelCenter.top - ( (deltaDecl) * pixelPerDeg) - 1;  // For some reason there's a rounding issue here, this seems to help, not sure why.
+            // moonPixelCenter.left = moonPixelCenter.left - ( (deltaRA) * pixelPerDeg);
             
-            moon.width(moonWidth);
-            moon.height(moonWidth);
+            moonPixelCenter.top =  ((- 1 *( (deltaDecl) * pixelPerDeg)) / displaySunWidth * 100) + "%";  // For some reason there's a rounding issue here, this seems to help, not sure why.
+            moonPixelCenter.left = ((-1 * ( (deltaRA) * pixelPerDeg)) / displaySunWidth * 100) + "%";
+            
+             
+            moon.width(moonWidth + "%");
+            moon.height(moonWidth + "%");
 
-            moon.offset(moonPixelCenter);  
+            moon.css("top", moonPixelCenter.top);
+            moon.css("left", moonPixelCenter.left);
+            
+            var moonTranslateFix = ((100 - moonWidth) / 2) + "%";
+            moon.css("transform", "translate(" + moonTranslateFix + ", " + moonTranslateFix + ")");
+            
             showMoon();
         }
         
@@ -2471,11 +2837,11 @@ class EclipseUI
             {
                 if(!penumbraShadow)
                 {
-                    penumbraShadow = map.addPolygon(data.pen_shadow, {fill_color: 'rgba(0, 0, 0, .2)'});
+                    penumbraShadow = map.addPolygon(data.pen_shadow, {fill_color: 'rgba(0, 0, 0, 0.2)'});
                 }
                 else
                 {
-                    penumbraShadow.setCoordinates(data.pen_shadow);
+                   penumbraShadow.setCoordinates(data.pen_shadow);
                 }
             }
             else
@@ -2488,7 +2854,6 @@ class EclipseUI
         
         this.init = function()
         {
-            jMap.height(mapHeight);
             material.disableSwipe(1);
             
             /**

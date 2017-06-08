@@ -49,7 +49,84 @@ and open the template in the editor.
         <script src="eclipse_ui_material.js"></script>
     </head>
 
-    <body>
+    <body class="material-background-color">
+        <!-- About Page -->
+        <div id="about-page" class="material-other-page" >
+            <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+                <header class="mdl-layout__header material-other-page-header">
+                    <div aria-expanded="false" role="button" tabindex="0" class="mdl-layout__drawer-button eclipse-drawer-button">
+                        <i id="about-back-button" class="material-icons">arrow_back</i>
+                    </div>
+                    <div class="mdl-layout__header-row">
+                        <!-- Title -->
+                        <span class="mdl-layout-title">About</span>
+                        <!-- Add spacer, to align navigation to the right -->
+                        <div class="mdl-layout-spacer"></div>
+
+                    </div>
+                </header>
+
+                <div class="mdl-layout__content material-background-color">
+                    <div class="page-content about-content">
+                        <!-- Your content goes here -->
+                        <div class="mdl-card mdl-shadow--2dp material-about-cards">
+                            <div class="mdl-card__title eclipse-card-background">
+                                <h2 class="mdl-card__title-text">Eclipse Chaser</h2>
+                            </div>
+                            <div class="mdl-card__supporting-text">
+                                version 3.0.0 Beta
+                            </div>
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a href="http://exmaple.com" target="_blank" id="help-info" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                    User Guide
+                                </a>
+                            </div>
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a href="http://exmaple.com" target="_blank" id="more-info" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                   More Information
+                                </a>
+                            </div>
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a id="disclaimer" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                   Disclaimer
+                                </a>
+                                <div id="disclaimer-text" class="mdl-card__supporting-text eclipse-card-text-hide">
+                                    This program is provided “As-Is”.  Use at your own risk. No warranty is expressed or implied.  Data calculations and accuracy are never guaranteed. Data connection charges may apply.  Not responsible for any data charges incurred at any time. Heavy data usage and/or high battery drain is possible while using this application.  Not responsible for device failure while using this application.  Not to be used for scientific purposes or by any government foreign or domestic for the purposes of informing the public about any events.  <b>NEVER look at the Sun, at any time, without proper and certified eye protection.</b>
+                                </div>
+                            </div>
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a id="privacy" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                   Privacy Policy
+                                </a>
+                                <div id="privacy-text" class="mdl-card__supporting-text eclipse-card-text-hide">
+                                    Privacy text to go here.
+                                     This program is provided “As-Is”.  Use at your own risk. No warranty is expressed or implied.  Data calculations and accuracy are never guaranteed. Data connection charges may apply.  Not responsible for any data charges incurred at any time. Heavy data usage and/or high battery drain is possible while using this application.  Not responsible for device failure while using this application.  Not to be used for scientific purposes or by any government foreign or domestic for the purposes of informing the public about any events.  <b>NEVER look at the Sun, at any time, without proper and certified eye protection.</b>
+                                </div>
+                            </div>
+                            
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a id="open-source" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                   Open Source Credits
+                                </a>
+                                <div id="open-source-text" class="mdl-card__supporting-text eclipse-card-text-hide eclipse-open-line-height">
+                                    <a href="http://exampe.com" target="_blank">"Eclipse Calculator" by Chris O'Byrne and Stephen McCann - 2003</a><br/>
+                                    <a href="http://exampe.com" target="_blank">Open Layers 4.1.1</a><br/>
+                                    <a href="http://exampe.com" target="_blank">Cesium 1.3.1</a><br/>
+                                    <a href="http://exampe.com" target="_blank">Arc-js</a><br/>
+                                    <a href="http://exampe.com" target="_blank">MDL Lite 1.3.0</a><br/>
+                                    <a href="http://exampe.com" target="_blank">Timezone Lookup</a><br/>
+                                    <a href="http://exampe.com" target="_blank">jQuery 1.3.1</a><br/>
+                                </div>
+                            </div>
+                            
+                        </div>                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- About Page End -->
+        
         <!-- MDL DIALOG -->
         <dialog id="diag" class="mdl-dialog">
             <h4 id="diag_title" class="mdl-dialog__title">General Error!</h4>
@@ -81,7 +158,7 @@ and open the template in the editor.
         <!-- MAP SEARCH MENU END -->
         
         <!-- Simple header with fixed tabs. -->
-        <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
+        <div id="main-content" class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
             
             <!-- LOADING SPINNER -->
             <div class="mdl-spinner mdl-js-spinner loading-spinner"></div>
@@ -93,6 +170,12 @@ and open the template in the editor.
                 <li class="mdl-menu__item eclipse-no-show" id="globe">3D Globe (Experimental)</li>
                 <li disabled="true" class="mdl-menu__item" id="animate-shadow">Animate Shadow</li>
                 <li class="mdl-menu__item" id="realtime-animate">Realtime Shadow</li>
+                <li class="mdl-menu__item" id="show-extras">
+                    <label for="chkbox1" class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect">
+                        <input type="checkbox" id="chkbox1" class="mdl-checkbox__input">
+                        <span class="mdl-checkbox__label material-check-box-menu">Show Circumstances</span>
+                    </label>
+                </li>
                 <li class="mdl-menu__item eclipse-no-show" id="first-contact-sim">First Contact</li>
                 <li class="mdl-menu__item eclipse-no-show" id="second-contact-sim">Second Contact</li>
                 <li class="mdl-menu__item eclipse-no-show" id="mid-eclipse-sim">Mid Eclipse</li>
@@ -121,8 +204,8 @@ and open the template in the editor.
                         
             <!-- ANIMATION TIME POPUPS END -->
                             
-            <header class="mdl-layout__header eclipse-header">
-                <div class="mdl-layout__header-row eclipse-header-row">
+            <header id="main-header" class="mdl-layout__header eclipse-header">
+                <div  class="mdl-layout__header-row eclipse-header-row">
                     
                     <!-- TITLE -->
                     <span id="eclipse-title" class="mdl-layout-title">Eclipse Chaser Mobile!</span>
@@ -150,7 +233,7 @@ and open the template in the editor.
                 </div>
                 
                 <!-- Tabs -->
-                <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
+                <div id="table-bar" class="mdl-layout__tab-bar mdl-js-ripple-effect">
                     <a id="circumstance-select" href="#circumstances-tab" class="mdl-layout__tab is-active">Circumstances</a>
                     <a id="map-select" href="#map-tab" class="mdl-layout__tab">Map</a>
                     <a id="simulation-select" href="#simulation-tab" class="mdl-layout__tab">Simulation</a>
@@ -168,12 +251,17 @@ and open the template in the editor.
                     </ul>
                     <!-- ECLIPSE CHOICE LIST END -->
 
-                    <!-- NEXT ECLIPSE BUTTONS -->
+                    
                     <div class="bottom-drawer-items">
+                        
+                        <!-- NEXT ECLIPSE BUTTONS -->
                         <button id="next-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">&nbsp;&nbsp;Next&nbsp;</button>
                         <button id="visible-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored eclipse-choice-buttons">Visible</button>
-
                         <!-- NEXT ECLIPSE BUTTONS END -->
+                        
+                        <nav class="mdl-navigation">
+                            <a class="mdl-navigation__link eclipse-drawer-font" id="about-link" href="#"><i class="material-icons material-drawer-icon">info_outline</i>About</a>
+                        </nav>
 
                         <!-- Eclipse Chaser Version Text -->
                         <ul class="mdl-list">
@@ -191,131 +279,138 @@ and open the template in the editor.
             <!-- APP DRAWER END -->
            
             <!-- APP CONTENT -->
-            <main class="mdl-layout__content">
+            <main id="app-content" class="mdl-layout__content material-background-color">
                 
                 <!-- CIRCUMSTANCES CONTENT -->
-                <section class="mdl-layout__tab-panel is-active eclipse-content-fade-in eclipse-unselectable" id="circumstances-tab">
-                    <div id="circumstances" class="page-content">
+                <section class="mdl-layout__tab-panel is-active eclipse-content-fade-in eclipse-unselectable eclipse-show-circumstances-vertical-trans" id="circumstances-tab">
+                    <div id="circumstances" class="page-content eclipse-circumstance-content">
                         
-                        <!-- ECLIPSE TYPE LIST -->
-                        <ul class='mdl-list__item mdl-list__item--two-line'>
-                            <li class="mdl-list__item">
-                                <span class="mdl-list__item-primary-content">
-                                    <i id="eclipse_pic" class="material-icons mdl-list__item-avatar no-eclipse-icon">No Eclipse</i>
-                                    <span id="eclipse_type">No Eclipse Occurs</span>
-                                    <span id="eclipse_date" class="mdl-list__item-sub-title"></span>
-                                    <span  id="not_visible" class="mdl-list__item-sub-title">This eclipse is not visible from this location.</span>
-                                </span>
-                            </li>
-                        </ul>
-                        <!-- ECLIPSE TYPE LIST END -->
+                        <div id="top">
+                            <!-- ECLIPSE TYPE LIST -->
+                            <ul id="eclipse-type-header" class='mdl-list__item mdl-list__item--two-line'>
+                                <li class="mdl-list__item">
+                                    <span class="mdl-list__item-primary-content">
+                                        <i id="eclipse_pic" class="material-icons mdl-list__item-avatar no-eclipse-icon">No Eclipse</i>
+                                        <span id="eclipse_type">No Eclipse Occurs</span>
+                                        <span id="eclipse_date" class="mdl-list__item-sub-title"></span>
+                                        <span  id="not_visible" class="mdl-list__item-sub-title">This eclipse is not visible from this location.</span>
+                                    </span>
+                                </li>
+                            </ul>
+                            <!-- ECLIPSE TYPE LIST END -->
 
-                        <!-- ECLIPSE CIRCUMSTANCES TABLE-->
-                        <table id="stats_block" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
-                            <thead>
-                                <tr>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Coverage</span><br><span id="coverage" class="eclipse-font-default">100.0%</span></th>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Magnitude</span><br><span id="magnitude" class="eclipse-font-default">101.0%</span></th>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td"><span id="depth_title">Depth</span><br><span id="depth" class="eclipse-font-default">76.8% S</span></th>
-                                </tr>
-                            </thead>
-                        </table>
-                         
-                        <table id="time_block" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
-                            <thead>
-                               <tr>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td">Start Time</th>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td">Countdown</th>
-                                    <th class="mdl-data-table__cell--non-numeric eclipse-td">Duration</th>
-                                </tr>
-                            </thead>
-                       
+                            <!-- ECLIPSE CIRCUMSTANCES TABLE-->
+                            <table id="stats_block" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
+                                <thead>
+                                    <tr>
+                                        <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Coverage</span><br><span id="coverage" class="eclipse-font-default">100.0%</span></th>
+                                        <th class="mdl-data-table__cell--non-numeric eclipse-td"><span>Magnitude</span><br><span id="magnitude" class="eclipse-font-default">101.0%</span></th>
+                                        <th class="mdl-data-table__cell--non-numeric eclipse-td"><span id="depth_title">Depth</span><br><span id="depth" class="eclipse-font-default">76.8% S</span></th>
+                                    </tr>
+                                </thead>
+                            </table>
 
-                            <tbody>
-                                <tr id="suncrise">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunrise</span><br><span id="sunrise_time">12:00:00 PM</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="sunrise_count">-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
-                                </tr>
+                            <table id="time_block" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
+                                <thead>
+                                   <tr>
+                                        <th class="mdl-data-table__cell--non-numeric eclipse-td">Start Time</th>
+                                        <th class="mdl-data-table__cell--non-numeric eclipse-td">Countdown</th>
+                                        <th class="mdl-data-table__cell--non-numeric eclipse-td">Duration</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                          
+                        <div class="eclipse-circumstance-bottom-content" id="bottom">
+                            <table id="time_block2" class="mdl-data-table mdl-js-data-table mdl-shadow--2dp eclipse-table" style="display: none;">
+                                <tbody>
+                                    <tr id="sunrise">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"><span>Local Sunrise</span><br><span id="sunrise_time">12:00:00 PM</span></td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="sunrise_count">-364:23:59:59</span></td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                    </tr>
 
-                                <tr id="partial-begins">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <span>Partial Phase Begins</span>                                        
-                                        <br><i id="c1_horiz" class="icon-sunset eclipse-stats-icon"></i>
-                                        <span id="c1_time">12:00:00 PM</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="c1_count">-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <br>
-                                        <span id="entire_duration">3:00:00</span>
-                                    </td>
-                                </tr>
+                                    <tr id="partial-begins">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <span>Partial Phase Begins</span>                                        
+                                            <br><i id="c1_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                            <span id="c1_time">12:00:00 PM</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="c1_count">-364:23:59:59</span></td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <br>
+                                            <span id="entire_duration">3:00:00</span>
+                                        </td>
+                                    </tr>
 
-                                <tr id="total_begins">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <span id="type_div_start">Total Phase Begins</span>
-                                        <br><i id="c2_horiz" class="icon-sunset eclipse-stats-icon"></i>
-                                        <span id="c2_time">12:00:00 PM</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <br>
-                                        <span id="c2_count">-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="total_duration">7:31</span></td>
-                                </tr>
+                                    <tr id="total_begins">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <span id="type_div_start">Total Phase Begins</span>
+                                            <br><i id="c2_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                            <span id="c2_time">12:00:00 PM</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <br>
+                                            <span id="c2_count">-364:23:59:59</span></td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"><br><span id="total_duration">7:31</span></td>
+                                    </tr>
 
-                                <tr id="mid-eclipse">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <span>Mid Eclipse At</span>
-                                        <br><i id="mid_horiz" class="icon-sunset eclipse-stats-icon"></i>
-                                        <span id="mid_time">12:00:00 PM</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <br><span id="mid_count">-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
-                                </tr>
+                                    <tr id="mid-eclipse">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <span>Mid Eclipse At</span>
+                                            <br><i id="mid_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                            <span id="mid_time">12:00:00 PM</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <br><span id="mid_count">-364:23:59:59</span></td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                    </tr>
 
-                                <tr id="total_ends">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <span id="type_div_ends">Total Phase Ends</span>
-                                        <br><i id="c3_horiz" class="icon-sunset eclipse-stats-icon"></i>
-                                        <span id="c3_time">12:00:00 PM</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"
-                                        ><br><span id="c3_count">-364:23:59:59</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
-                                </tr>
+                                    <tr id="total_ends">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <span id="type_div_ends">Total Phase Ends</span>
+                                            <br><i id="c3_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                            <span id="c3_time">12:00:00 PM</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"
+                                            ><br><span id="c3_count">-364:23:59:59</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                    </tr>
 
-                               <tr id="partial-ends">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <span>Partial Phase Ends</span>
-                                        <br><i id="c4_horiz" class="icon-sunset eclipse-stats-icon"></i>
-                                        <span id="c4_time">12:00:00 PM</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <br><span id="c4_count">-364:23:59:59</span></td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
-                                </tr>
+                                   <tr id="partial-ends">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <span>Partial Phase Ends</span>
+                                            <br><i id="c4_horiz" class="icon-sunset eclipse-stats-icon"></i>
+                                            <span id="c4_time">12:00:00 PM</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <br><span id="c4_count">-364:23:59:59</span></td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                    </tr>
 
-                                <tr id="sunset">
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td">
-                                        <span>Local Sunset</span>
-                                        <br><span  id="sunset_time">12:00:00 PM</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"
-                                        ><br><span id="sunset_count">-364:23:59:59</span>
-                                    </td>
-                                    <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <!-- ECLIPSE CIRCUMSTANCES TABLE END -->
+                                    <tr id="sunset">
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td">
+                                            <span>Local Sunset</span>
+                                            <br><span  id="sunset_time">12:00:00 PM</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"
+                                            ><br><span id="sunset_count">-364:23:59:59</span>
+                                        </td>
+                                        <td class="mdl-data-table__cell--non-numeric eclipse-td"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
                     </div>
+                        <!-- ECLIPSE CIRCUMSTANCES TABLE END -->
+                    
                 </section>
                 <!-- CIRCUMSTANCES CONTENT END -->
 
                 <!-- MAP CONTENT -->
-                <section class="mdl-layout__tab-panel eclipse-content-fade-in eclipse-unselectable" id="map-tab">
+                <section class="mdl-layout__tab-panel eclipse-content-fade-in eclipse-unselectable eclipse-table-split" id="map-tab">
                     <div id="map" class="page-content eclipse-map"  style="display: none;">
                         
                         <div id="zoom-buttons" class="eclipse-zoom-button-placement eclipse-zoom-button-placement-transition">
@@ -326,27 +421,27 @@ and open the template in the editor.
                             <button id="map-zoom-out-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored">
                                 <i class="material-icons eclipse-minus-button-font">-</i>
                             </button>
+                           
                         </div>
                             
                         <div id="map-buttons" class="eclipse-map-button-placement eclipse-map-button-placement-transition">
                             <button id="map-location-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--primary">
                                 <i class="material-icons">my_location</i>
                             </button>
+                             <div class="eclipse-map-button-pad"></div>
+                            <button id="map-offline-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored eclipse-offline-button-placement">
+                                <i class="material-icons">sync</i>
+                            </button> 
                         </div>
-
-                        <button id="map-offline-button" class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-js-ripple-effect mdl-button--colored eclipse-offline-button-placement">
-                            <i class="material-icons">sync</i>
-                        </button>                   
-                        
                     </div>
+                    
+                   
                 </section>
                 <!-- MAP CONTENT END -->
 
                 <!-- SIMULATION CONTENT -->
-                <section class="mdl-layout__tab-panel eclipse-content-fade-in" id="simulation-tab">
-                   
-                    
-                    <div class="page-content simulation-content"  style="display: none;">
+                <section class="mdl-layout__tab-panel eclipse-content-fade-in eclipse-simulation-content" id="simulation-tab" style="visibility:  hidden;">
+                    <div class="page-content eclipse-simulaton-content-fill">
                         <span id="contact-point" class="mdl-chip eclipse-animation-time-background eclipse-realtime-shadow">
                             <span class="mdl-chip__text">Mid Eclipse</span>
                         </span>                        

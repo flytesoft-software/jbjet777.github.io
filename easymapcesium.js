@@ -4,9 +4,7 @@
  * and open the template in the editor.
  */
 
-"use strict";
-
-class EasyMap
+class EasyMapCesium
 {
     static get OFFLINE_MAP()
     {
@@ -20,9 +18,6 @@ class EasyMap
     
     constructor(refTarget, refZoom, coordinates)
     {
-        const SCENE_OPTS = {scene3DOnly: true, contextOptions: { webgl : { alpha : true, depth : true, stencil : false, antialias : false, premultipliedAlpha : true, preserveDrawingBuffer : true, failIfMajorPerformanceCaveat : false }, 
-                            allowTextureFilterAnisotropic : false }};
-        
         var maxZoom = 20;
         var minZoom = 1;
         
@@ -37,55 +32,38 @@ class EasyMap
         var isZooming = false;
         var callDragStartOnce = true;
         
+        var currentCoords = coordinates;
+        
         var mapIsOnline = false;
         
-        var interAct = ol.interaction.defaults({
-            altShiftDragRotate: false,
-            pinchRotate: false,
-            shiftDragZoom: false});
-        
-        var view = new ol.View(
+        var localTileProvider = new Cesium.UrlTemplateImageryProvider(
                 {
-                     center: ol.proj.fromLonLat([coordinates.longitude, coordinates.latitude]),
-                     zoom: refZoom
+                    url : EasyMapCesium.ONLINE_MAP
                 });
                 
-        var drawSource = new ol.source.Vector({ wrapX: true});
-        var mapSource = new ol.source.OSM({url: EasyMap.OFFLINE_MAP});
+        var viewer = new Cesium.Viewer(refTarget, {imageryProvider: localTileProvider, 
+                                        baseLayerPicker: false,
+                                        animation: false,
+                                        fullscreenButton: false,
+                                        geocoder: false,
+                                        homeButton: false,
+                                        infoBox: false,
+                                        sceneModePicker: false,
+                                        selectionIndicator: false,
+                                        timeline: false,
+                                        navigationHelpButton: false,
+                                        navigationInstructionsInitiallyVisible: false});
         
-        var mapLayer = new ol.layer.Tile(
-                            {
-                                source: mapSource
-                            });
+        viewer.flyTo(
+                        {
+                            destination : Cesium.Cartesian3.fromDegrees(currentCoords.longitude, currentCoords.latitude)
+                        });
         
-        var map = new ol.Map(
-                {
-                    target: refTarget,
-                    layers: [mapLayer],
-                    view: view,
-                    controls: [],
-                    interactions: interAct,
-                    loadTilesWhileAnimating: true,
-                    loadTilesWhileInteracting: true
-                });
-                
-        var drawLayer = new ol.layer.Vector({
-                                source: drawSource,
-                                style: new ol.style.Style({stroke: new ol.style.Stroke({color: 'black', width: 2})}),
-                                updateWhileAnimating: true,
-                                updateWhileInteracting: true,
-                                renderBuffer: 500
-                            });
         
-        map.addLayer(drawLayer);
+        // var lastLeftLong = getBounds().bottomLeft.longitude;
+        // var lastRightLong = getBounds().topRight.longitude;
         
-        var ol3d = new olcs.OLCesium({map: map, sceneOptions: SCENE_OPTS});
-        ol3d.setTargetFrameRate(Number.POSITIVE_INFINITY);
-        
-        var lastLeftLong = getBounds().bottomLeft.longitude;
-        var lastRightLong = getBounds().topRight.longitude;
-        
-        setTileLoadError();
+        // setTileLoadError();
         
         /*
          * Makes sure value is inside circle 360.0 degrees!
@@ -198,6 +176,7 @@ class EasyMap
         
         function setTileLoadError()
         {
+            /***
             mapSource.on("tileloaderror", function(ev)
             {
                 if(tileLoadErrorCallBack)
@@ -207,6 +186,16 @@ class EasyMap
                 var zoom = view.getZoom();
                 console.log("Tile load error. Zoom: " + zoom);
             });
+            ***/
+        }
+        
+        function degToRad(angleDeg) 
+        {
+            if(isNaN(angleDeg))
+            {
+                return 0.0;
+            }
+            return (Math.PI * angleDeg / 180.0);
         }
         
         /* Creates a great circle between 
@@ -254,6 +243,7 @@ class EasyMap
          */
         this.addPolyLine = function(coords, options)
         {
+            /***
             var strokeColor = 'black';
             var strokeWidth = 1;
             
@@ -309,6 +299,7 @@ class EasyMap
                             
                 return feature;            
             }
+            ***/
             
             return null;
         };
@@ -362,6 +353,7 @@ class EasyMap
         
         this.addPolygon = function(coords, options)
         {
+            /***
             if(coords)
             {
                 var fillColor = 'rgba(0, 0, 0, .5)';
@@ -429,13 +421,14 @@ class EasyMap
                                           
                 return feature;            
             }
+            ***/
             
             return null;
         };
         
         this.setRotation = function(angle)
         {
-            view.rotate(angle);
+            viewer.camera.lookRight(degToRad(angle));
         };
         
         /*
@@ -444,11 +437,12 @@ class EasyMap
          */
         this.enableGlobe = function()
         {
+            /***       
             ol3d.setEnabled(true);
             var scene = ol3d.getCesiumScene();
             console.log("GLOBE");
             
-            /***
+            
             var redPolygon = viewer.entities.add({
                 name : 'Red polygon on surface',
                 polygon : {
@@ -480,6 +474,7 @@ class EasyMap
          */
         this.addMarker = function(coords, imgSrc)
         {
+            /***
             var iconStyle = new ol.style.Style(
                     {
                         image: new ol.style.Icon(
@@ -499,16 +494,21 @@ class EasyMap
             iconFeature.setStyle(iconStyle);
             
             drawSource.addFeature(iconFeature);
-            
+            ***/
+           
+            var iconFeature = new Object();
             iconFeature.setLocation = function(coords)
             {
+                /***
                 var point = new ol.geom.Point([coords.longitude, coords.latitude]);
                 point.transform('EPSG:4326', 'EPSG:3857');
                 
                 this.setGeometry(point);
+                ****/
             };
             
             return iconFeature;
+           
         };
         
         /*
@@ -528,6 +528,7 @@ class EasyMap
          */
         function getBounds()
         {
+            /***
             var viewExtent = view.calculateExtent(map.getSize());
             var bL = ol.proj.transform([viewExtent[0], viewExtent[1]], 'EPSG:3857', 'EPSG:4326');
             var tR = ol.proj.transform([viewExtent[2], viewExtent[3]], 'EPSG:3857', 'EPSG:4326');
@@ -536,10 +537,17 @@ class EasyMap
                 bottomLeft: new Position(bL[1], bL[0]),
                 topRight: new Position(tR[1], tR[0])
             };
+            ***/
+           
+           return{
+                bottomLeft: new Position(-90, -180),
+                topRight: new Position(90, 0)
+            };
         };
         
         function removeFeature(feature)
         {
+            /***
             if(feature)
             {
                 if(Array.isArray(feature))
@@ -553,6 +561,7 @@ class EasyMap
                 }
                 drawSource.removeFeature(feature);
             }
+            ***/
             
             return null;
         }
@@ -573,7 +582,7 @@ class EasyMap
          */
         this.render = function()
         {
-            map.render();
+            viewer.render();
         };
         
         /*
@@ -582,7 +591,7 @@ class EasyMap
          */
         this.clearMap = function()
         {
-            drawSource.clear(true);
+            // drawSource.clear(true);
         };
         
         /*
@@ -604,6 +613,7 @@ class EasyMap
             throw new Error("Input function for tile load error.");
         };
         
+        /***
         map.on("pointermove", function(ev)
         {
             if(ev.dragging)
@@ -715,12 +725,13 @@ class EasyMap
            firstDragCoord = null;
            lastDragCoord = null;
         });
+        ***/
         
         function mapClick(ev)
         {
            if(mapClickCallBack)
            {
-               var clickPlace = ol.proj.toLonLat(ev.coordinate);
+               // var clickPlace = ol.proj.toLonLat(ev.coordinate);
 
                mapClickCallBack(new Position(clickPlace[1], clickPlace[0]));
            } 
@@ -728,77 +739,68 @@ class EasyMap
         
         this.onDoubleClick = function(callback)
         {
-            mapDoubleClickCallback = callback;
+            // mapDoubleClickCallback = callback;
             
-            map.on("doubleclick", mapDoubleClickCallback);
+            // map.on("doubleclick", mapDoubleClickCallback);
         };
         
         this.onClick = function(callback)
         {
-           mapClickCallBack = callback;
-           map.on("singleclick", mapClick);
+           // mapClickCallBack = callback;
+           // map.on("singleclick", mapClick);
         };
         
         this.clickOff = function()
         {
+            /***
             if(mapClickCallBack)
             {
                 map.un("singleclick", mapClick);
                 mapClickCallBack = null;
             }
+            ***/
         };
         
         this.doubleClickOff = function()
         {
+            /***
             if(mapDoubleClickCallback)
             {
                 map.un("doubleclick", mapDoubleClickCallback);
                 mapDoubleClickCallback = null;
             }
+            ***/
         };
         
         this.onDragEnd = function(callback)
         {
-            dragEndCallBack = callback;
+            // dragEndCallBack = callback;
         };
         
         this.onDragStart = function(callback)
         {
-            dragStartCallBack = callback;            
+            // dragStartCallBack = callback;            
         };
         
         this.onRedrawCall = function(callback)
         {
-            redrawCallBack = callback;
+            // redrawCallBack = callback;
         };
         
         this.on = function(event, func, thisref)
         {
-            return map.on(event, func, thisref);
+           // return map.on(event, func, thisref);
         };
         
         this.onZoomEnd = function(func, thisRef)
         {
+            /***
             return view.on("change:resolution", function(ev)
             {
                 isZooming = true;
-                map.once("moveend", function()
-                {
-                    func();
-                    var zoom = view.getZoom();
-                    
-                    if(zoom > maxZoom)
-                    {
-                        view.setZoom(maxZoom);
-                    }
-                    
-                    if(zoom < minZoom)
-                    {
-                        view.setZoom(minZoom);
-                    }
-                    
-                }, thisRef);                
+                map.once("moveend", func, thisRef);                
             }, thisRef);
+            ***/
         };
         
         /*
@@ -807,7 +809,7 @@ class EasyMap
          */
         this.updateSize = function()
         {
-            map.updateSize();
+            viewer.forceResize();
         };
          
         /*
@@ -816,10 +818,7 @@ class EasyMap
          */
         this.zoomIn = function()
         {
-            if(view.getZoom() < maxZoom)
-            {
-                view.setZoom(view.getZoom() + 1);
-            }
+            viewer.camera.zoomIn(1);
         };
         
         /*
@@ -828,10 +827,7 @@ class EasyMap
          */
         this.zoomOut = function()
         {
-            if(view.getZoom() > minZoom)
-            {
-                view.setZoom(view.getZoom() - 1);
-            }
+            viewer.camera.zoomOut(1);
         };
         
         /*
@@ -841,6 +837,7 @@ class EasyMap
          */
         this.setSource = function(src)
         {
+            /***
             mapSource = new ol.source.OSM({url: src});
             mapLayer.setSource(mapSource);
             this.render();
@@ -851,38 +848,25 @@ class EasyMap
             
             ol3d.setEnabled(wasEnabled);
             setTileLoadError();
+            ***/
         };
         
         this.setOfflineMap = function()
         {
+            /***
             mapIsOnline = false;
             this.setSource(EasyMap.OFFLINE_MAP);
             maxZoom = 7;
-            if(this.getZoom() > maxZoom)
-            {
-                this.setZoom(maxZoom);
-            }
-            if(this.getZoom() < minZoom)
-            {
-                this.setZoom(minZoom);
-            }
-            this.render();
+            ***/
         };
 
         this.setOnlineMap = function()
         {
+            /***
             mapIsOnline = true;
             this.setSource(EasyMap.ONLINE_MAP);
             maxZoom = 20;
-            if(this.getZoom() > maxZoom)
-            {
-                this.setZoom(maxZoom);
-            }
-            if(this.getZoom() < minZoom)
-            {
-                this.setZoom(minZoom);
-            }
-            this.render();
+            ***/
         };
         
         /*
@@ -904,7 +888,11 @@ class EasyMap
         {
             if(coords)
             {
-                view.setCenter(ol.proj.fromLonLat([coords.longitude, coords.latitude]));
+                currentCoords = coords;
+                viewer.flyTo(
+                        {
+                            destination : Cesium.Cartesian3.fromDegrees(coords.longitude, coords.latitude)
+                        });
             }
         };
         
@@ -917,18 +905,17 @@ class EasyMap
         {
             if(typeof(zoomVal) === "number")
             {
+                var actualZoom = zoomVal;
                 if(zoomVal > maxZoom)
                 {
-                    view.setZoom(maxZoom);
+                   actualZoom = maxZoom;
                 }
                 else if(zoomVal < minZoom)
                 {
-                    view.setZoom(minZoom);
+                   actualZoom = minZoom;
                 }
-                else
-                {
-                    view.setZoom(zoomVal);
-                }
+                
+                viewer.zoomTo({position: Cesium.Cartesian3.fromDegrees(currentCoords.longitude, currentCoords.latitude, actualZoom * 1000)});
             }
             else
             {
@@ -938,7 +925,7 @@ class EasyMap
         
         this.getZoom = function()
         {
-            return view.getZoom();
+            return viewer.camera.getMagnitude();
         };
         
         this.getMaxZoom = function()
@@ -952,3 +939,6 @@ class EasyMap
         };
     }
 }
+
+
+
