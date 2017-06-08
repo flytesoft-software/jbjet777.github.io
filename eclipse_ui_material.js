@@ -1424,6 +1424,10 @@ class EclipseUI
             
             mapSearchInputID.focus(function(event)
             {
+                localTimeDiv.hide();
+                zuluTimeDiv.hide();
+                realTimeInfoID.hide();
+                
                 if(isSmallScreen())
                 {
                     eclipseTitle.addClass("eclipse-hide-header-text");
@@ -1441,12 +1445,15 @@ class EclipseUI
             
             mapSearchInputID.focusout(function(event)
             {
+                localTimeDiv.show();
+                zuluTimeDiv.show();
+                realTimeInfoID.show();
+                
                 mapSearchInputID.val("");
                 mapSearchBoxID.removeClass("is-dirty");
                 mapSearchMenuID.removeClass("eclipse-map-search-list-show");
                 eclipseTitle.removeClass("eclipse-hide-header-text");
                 eclipseTitleDate.removeClass("eclipse-hide-header-text");
-                resetMapSearchMenu();
                 
                 material.unSpinDrawerButton();
                 mapSearchIcon.parent("label").show();
@@ -1465,6 +1472,10 @@ class EclipseUI
                         setLocation(new Position(parseFloat(mapSearchData[idx].lat), parseFloat(mapSearchData[idx].lon)));
                         mapSearchData = null;
                     }
+                }
+                else
+                {
+                    showToast("No valid city selected.");
                 }
             });
            
