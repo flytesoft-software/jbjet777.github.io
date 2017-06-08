@@ -1056,7 +1056,7 @@ class EclipseUI
                 mapSearchBoxID.hide();                
                 
                 material.enableYScroll();
-                hideMoon();              
+                // hideMoon();              
                
                 setPageHeights();
                 
@@ -2103,6 +2103,7 @@ class EclipseUI
             } 
             else
             {
+                hideMoon();
                 hideSimMenuItems();
                 noSimEclipse();
                 c1Time = null;
@@ -2810,20 +2811,17 @@ class EclipseUI
             var moonTranslateFix = ((100 - moonWidth) / 2) + "%";
             moon.css("transform", "translate(" + moonTranslateFix + ", " + moonTranslateFix + ")");
             
-            showMoon();
+            showMoon();           
         }
         
         function showMoon()
         {
-            if(!moon.hasClass("eclipse-moon-visible"))
-            {
-                moon.addClass("eclipse-moon-visible");
-            }
+            moon.removeClass("eclipse-moon-invisible");           
         }
-        
+                
         function hideMoon()
         {
-            moon.removeClass("eclipse-moon-visible");
+            moon.addClass("eclipse-moon-invisible");
         }
                        
         function onShadowComplete(data)

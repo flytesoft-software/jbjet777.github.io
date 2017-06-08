@@ -227,6 +227,7 @@ class MaterialAddons
                                 nextPage.addClass("eclipse-content-swipe-in-right");
                                 ignorePageChange = true;
                                 privTabs[pageIndex - 1].click();
+                                $(privPages[pageIndex]).css("left", "");
                                 onBeforePageChange(event);
                                 nextPage.animationEndOne(function (event)
                                 {
@@ -266,6 +267,7 @@ class MaterialAddons
                             nextPage.addClass("eclipse-content-swipe-in-left");
                             ignorePageChange = true;
                             privTabs[pageIndex + 1].click();
+                            $(privPages[pageIndex]).css("left", "");
                             beforePageChangeFunc(event);
                             nextPage.animationEndOne(function(event)
                             {                            

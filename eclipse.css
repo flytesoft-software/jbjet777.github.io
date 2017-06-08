@@ -863,20 +863,15 @@ and open the template in the editor.
 
 #moon
 {
-    height:200px;
-    width:200px;
     background-color: black;
     border-radius:50%;
-    top:0;
-    left:0;
     color: #fff;
     position: relative;
-    visibility: hidden;
 }
 
-.eclipse-moon-visible
+.eclipse-moon-invisible
 {
-    visibility: visible !important;    
+    visibility: hidden !important;    
 }
 
 .eclipse-card-background
