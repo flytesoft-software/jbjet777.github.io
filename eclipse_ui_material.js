@@ -194,8 +194,6 @@ class EclipseUI
         var RUN_BEFORE = "run_before";
         var IMGS_FOLDER = 'images/';
         var MASTER_TIMER_INTERVAL = 1000;
-        var START_COORDS = [34, -118];
-        var START_ZOOM = 2;
         var IGNORE_DRAG = 15;   // If drag movement is small, keep location centered.
         var METERS_TO_FEET = 3.28084;
         
@@ -208,6 +206,7 @@ class EclipseUI
         var eclipseLoadWorker = null;
         var currentEclipseRef = null;
         var mapSearchData = null;
+        var lastEclipseType = "";
         
         var positionWatch = new WatchPosition;
         var currentCoords = STARTING_COORDS;
@@ -466,15 +465,7 @@ class EclipseUI
             else
             {
                 minHeight = screenHeight;
-            }           
-            
-            
-            /***
-            if(screenHeight < 375)
-            {
-                minHeight += screenHeight - minHeight;
-            }
-            ***/
+            } 
            
             circumstances.css("min-height", minHeight + "px");
             updateSimMetrics(contentHeight);
@@ -810,11 +801,24 @@ class EclipseUI
             eclipseTypeID.hide();
             eclipseDateID.hide(); 
             
-            if(updateImmediately)
+            if(true)
             {
+                var statsBlockOffset = 0;
+                if(statsBlock.is(":visible"))
+                {
+                    statsBlockOffset = statsBlock.offset().top;
+                    eclipseTypeHeader.css("float", "");
+                    eclipseTypeHeader.css("transform", "");
+                }
+                else
+                {
+                    statsBlockOffset = eclipseTypeHeader.offset().top;
+                    eclipseTypeHeader.css("float", "none");
+                    eclipseTypeHeader.css("transform", "translateX(0)");
+                }
                 if(vertical)
                 {
-                    mapHeight = statsBlock.offset().top - material.getHeaderHeight() - TABLE_PADDING;
+                    mapHeight = statsBlockOffset - material.getHeaderHeight() - TABLE_PADDING;
                     mapButtons.css("bottom", "calc(" + (screenHeight - mapHeight) + "px - 2em)"); 
                 }
                 else
@@ -827,15 +831,30 @@ class EclipseUI
                 map.updateSize();                               
             }
             
-            sun.css("box-shadow", "8px 8px 8px 8px #888888");
+            sun.css("box-shadow", "4px 4px 4px 4px #888888");
             updateMoonPosition();
             
-            circumstanceTab.transitionEndOff(); // Make sure we clean up callbacks.
+            circumstanceTab.transitionEndOff(); // Make sure we clean up previously unused callbacks.
             circumstanceTab.transitionEndOne(function()
             {
-                var statsBlockOffset = statsBlock.offset().top;
-                var statsBlockNoPad = statsBlockOffset - 24;
+                var statsBlockOffset = 0;
+                var statsBlockNoPad = 0;
             
+                if(statsBlock.is(":visible"))
+                {
+                    statsBlockOffset = statsBlock.offset().top;
+                    eclipseTypeHeader.css("float", "");
+                    eclipseTypeHeader.css("transform", "");
+                }
+                else
+                {
+                    statsBlockOffset = eclipseTypeHeader.offset().top;
+                    eclipseTypeHeader.css("float", "none");
+                    eclipseTypeHeader.css("transform", "translateX(0)");
+                }
+                
+                statsBlockNoPad = statsBlockOffset - 24;
+                
                 if(vertical)
                 {
                     zuluTimeDiv.css("top", "calc(" + statsBlockNoPad + "px - 1.2em");
@@ -847,6 +866,10 @@ class EclipseUI
                 else
                 {
                     var statsBlockWidth = statsBlock.width();
+                    if(statsBlockWidth === 0)
+                    {
+                        statsBlockWidth = eclipseTypeHeader.width();
+                    }
                     zuluTimeDiv.css("top", "");
                     localTimeDiv.css("top", "");
                     
@@ -881,6 +904,8 @@ class EclipseUI
             localTimeDiv.css("left", "");
             realTimeInfoID.css("left", "");
             realTimeInfoID.css("transform", "");
+            eclipseTypeHeader.css("float", "");
+            eclipseTypeHeader.css("transform", "");
             eclipseTypeID.show();
             eclipseDateID.show();
             sun.css("box-shadow", "");
@@ -889,6 +914,11 @@ class EclipseUI
         function bindEvents()
         {
             console.log("Binding Eclipse UI events.");
+            
+            window.setInterval(function()
+            {
+                // updateMoonPosition();
+            }, 1000);
             
             window.setInterval(checkLocalTimeZone, 30000);
             
@@ -1898,7 +1928,7 @@ class EclipseUI
             
             var current_date = new Date();
             current_date.setTime(current_date.getTime() + dateOffset);
-
+            
             if (eclipseStats.isVisible)		// TODO: Fix? CPU time costly to traverse the DOM everytime we update this.
             {
                 var date_options = {year: "numeric", month: "long", day: "numeric"};
@@ -2099,24 +2129,35 @@ class EclipseUI
                     displaySimMenuItems();
                 }
                 
-                setPageHeights();
+                // setPageHeights();
             } 
-            else
+            
+            if(lastEclipseType !== eclipseStats.eclipseType) // Only need to update these items in the event of eclipse type change.
             {
-                hideMoon();
-                hideSimMenuItems();
-                noSimEclipse();
-                c1Time = null;
-                midTime = null;
-                c4Time = null;
-                sunRiseCountID.html("");
-                c1CountID.html("");
-                midCountID.html("");
-                c4CountID.html("");
-                sunSetCountID.html("");
-                resetEclipseListStats();
-                setPageHeights();
+                lastEclipseType = eclipseStats.eclipseType;
+                console.log("Eclipse type change.");
+                if(eclipseStats.isVisible)
+                {
+                    showMoon();
+                }
+                else
+                {
+                    hideMoon();
+                    hideSimMenuItems();
+                    noSimEclipse();
+                    c1Time = null;
+                    midTime = null;
+                    c4Time = null;
+                    sunRiseCountID.html("");
+                    c1CountID.html("");
+                    midCountID.html("");
+                    c4CountID.html("");
+                    sunSetCountID.html("");
+                    resetEclipseListStats();
+                }
+                setPageHeights();                
             }
+            
         }
         
         /*
@@ -2810,8 +2851,7 @@ class EclipseUI
             
             var moonTranslateFix = ((100 - moonWidth) / 2) + "%";
             moon.css("transform", "translate(" + moonTranslateFix + ", " + moonTranslateFix + ")");
-            
-            showMoon();           
+                     
         }
         
         function showMoon()
@@ -2821,7 +2861,10 @@ class EclipseUI
                 
         function hideMoon()
         {
-            moon.addClass("eclipse-moon-invisible");
+            if(!moon.hasClass("eclipse-moon-invisible"))
+            {
+                moon.addClass("eclipse-moon-invisible");
+            }
         }
                        
         function onShadowComplete(data)

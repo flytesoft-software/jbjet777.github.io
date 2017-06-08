@@ -864,9 +864,16 @@ and open the template in the editor.
 #moon
 {
     background-color: black;
-    border-radius:50%;
+    border-radius: 50%;
     color: #fff;
-    position: relative;
+    position: absolute;
+    
+    /****
+    transition-property: all;
+    transition-duration: .1s;
+    transition-timing-function: linear;
+    transition-delay: 0s;
+    ****/
 }
 
 .eclipse-moon-invisible
