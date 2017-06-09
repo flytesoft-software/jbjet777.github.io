@@ -63,7 +63,9 @@ class EasyMap
                     target: refTarget,
                     layers: [mapLayer],
                     view: view,
-                    controls: [],
+                    controls: [new ol.control.Attribution({collapsible: false,
+                                                            label: " ",
+                                                        collapseLabel: " "})],
                     interactions: interAct,
                     loadTilesWhileAnimating: true,
                     loadTilesWhileInteracting: true
@@ -86,6 +88,16 @@ class EasyMap
         var lastRightLong = getBounds().topRight.longitude;
         
         setTileLoadError();
+        
+        fixAttribution();
+        
+        function fixAttribution()
+        {
+            var attr = $(".ol-attribution");
+            
+            attr.css("white-space", "nowrap");
+            attr.children("ul").children("li").eq(0).remove();
+        }
         
         /*
          * Makes sure value is inside circle 360.0 degrees!
@@ -857,6 +869,8 @@ class EasyMap
         {
             mapIsOnline = false;
             this.setSource(EasyMap.OFFLINE_MAP);
+            mapSource.setAttributions("<a href='https://nationalmap.gov/' target='_blank'>The USGS National Map</a>");
+            
             maxZoom = 7;
             if(this.getZoom() > maxZoom)
             {
@@ -873,6 +887,8 @@ class EasyMap
         {
             mapIsOnline = true;
             this.setSource(EasyMap.ONLINE_MAP);
+            mapSource.setAttributions('&copy; Esri &mdash; Source: Esri, DigitalGlobe, GeoEye, Earthstar Geographics, CNES/Airbus DS, USDA, USGS, AeroGRID, IGN, and the GIS User Community');
+            
             maxZoom = 20;
             if(this.getZoom() > maxZoom)
             {

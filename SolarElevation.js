@@ -2,6 +2,7 @@
  * SolarElevation.js
  * author: Joshua Berlin
  * Calculates solar elevation in degrees from given, latitude, longitude, and time.
+ * Based on scripts and calculations from: https://www.esrl.noaa.gov/gmd/grad/solcalc/index.html
  * 7-19-2014 B
  * */
 

@@ -601,6 +601,7 @@ class EclipseUI
         function displaySimMenuItems()
         {
             globeMenuItem.hide();
+            showExtras.hide();
             firstContactItem.show();
             midEclipseItem.show();
             fourthContactItem.show();
@@ -620,6 +621,7 @@ class EclipseUI
         
         function hideSimMenuItems()
         {
+            showExtras.show();
             globeMenuItem.show();
             firstContactItem.hide();            
             midEclipseItem.hide();           
@@ -1292,7 +1294,7 @@ class EclipseUI
                 {
                     dateOffset = 0;
                     stopShadowAnimation();
-                    dateOffset = c1Time.getTime() - (new Date().getTime());
+                    dateOffset = c1Time.getTime() - (new Date().getTime()) - 10000;
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to partial eclipse begins!");
@@ -1306,7 +1308,7 @@ class EclipseUI
                 {  
                     dateOffset = 0;
                     stopShadowAnimation();
-                    dateOffset = c2Time.getTime() - (new Date().getTime());
+                    dateOffset = c2Time.getTime() - (new Date().getTime()) - 10000;
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to " + currentEclipseRef.type + " eclipse begins!");
@@ -1320,7 +1322,7 @@ class EclipseUI
                 {
                     dateOffset = 0;
                     stopShadowAnimation();
-                    dateOffset = midTime.getTime() - (new Date().getTime());
+                    dateOffset = midTime.getTime() - (new Date().getTime()) - 10000;
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to mid eclipse!");
@@ -1334,7 +1336,7 @@ class EclipseUI
                 {
                     dateOffset = 0;
                     stopShadowAnimation();
-                    dateOffset = c3Time.getTime() - (new Date().getTime());
+                    dateOffset = c3Time.getTime() - (new Date().getTime()) - 10000;
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to " + currentEclipseRef.type + " eclipse ends!");
@@ -1348,7 +1350,7 @@ class EclipseUI
                {
                     dateOffset = 0;
                     stopShadowAnimation();
-                    dateOffset = c4Time.getTime() - (new Date().getTime());
+                    dateOffset = c4Time.getTime() - (new Date().getTime()) - 10000;
                     timeID.addClass("eclipse-time-travel-font");
                     material.changePage(1);
                     showToast("Time traveling to end of eclipse!");
