@@ -2174,6 +2174,32 @@ function EclipseData(/* Object */ eclipse)
         return this.westPenumbraLineTimes;
     };
     
+    this.getPointCount = function()
+    {
+        var pointCount = 0;
+        
+        if(this.getWestLimitLine())
+        {
+            pointCount += this.getWestLimitLine().length;
+        }
+        if(this.getEastLimitLine())
+        {
+            pointCount += this.getEastLimitLine().length;
+        }
+        
+        if(this.getNorthPenumbraLine())
+        {
+            pointCount += this.getNorthPenumbraLine().length;
+        }
+        
+        if(this.getSouthPenumbraLine())
+        {
+            pointCount += this.getSouthPenumbraLine().length;
+        }
+        
+        return pointCount;                
+    };
+    
     /* Input javaScript Date object to see if this eclipse
      * is occuring somewhere on Earth.
      * @param {Date} date -- Date and time to test if eclipse is occurring.

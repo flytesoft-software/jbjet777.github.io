@@ -865,17 +865,24 @@ class DialogBox
         
         function close()
         {
-            dialog[0].close();
-            
-            // Dialog.close() Bug fix see: https://github.com/google/material-design-lite/issues/4328
-            // TODO: Remove with MDL 2.x.x
-            // document.querySelector('.mdl-layout__content').style.overflowY = 'auto';
-            // document.querySelector('.mdl-layout__content').style.overflowY = '';
-            document.querySelector('.mdl-list').style.overflowY = 'auto';
-            document.querySelector('.mdl-list').style.overflowY = '';
-            
-            okButton.clickOff();
-            closeButton.clickOff();
+            try
+            {
+                dialog[0].close();
+
+                // Dialog.close() Bug fix see: https://github.com/google/material-design-lite/issues/4328
+                // TODO: Remove with MDL 2.x.x
+                // document.querySelector('.mdl-layout__content').style.overflowY = 'auto';
+                // document.querySelector('.mdl-layout__content').style.overflowY = '';
+                document.querySelector('.mdl-list').style.overflowY = 'auto';
+                document.querySelector('.mdl-list').style.overflowY = '';
+
+                okButton.clickOff();
+                closeButton.clickOff();
+            }
+            catch(error)
+            {
+                console.log("Dialog box already closed.");
+            }
         }
         
         function resetState()
@@ -909,6 +916,11 @@ class DialogBox
                 return closeCallBack(event);
             }
         });
+        
+        this.close = function()
+        {
+            close();
+        };
         
         this.hideOKButton = function()
         {

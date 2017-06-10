@@ -8,14 +8,25 @@
 
 class LineWorkers
 {
-    constructor(func)
+    constructor(lineUpdateFunc, lineCompleteFunc)
     {
-        if(typeof(func) !== "function")
+        if(typeof(lineUpdateFunc) !== "function")
         {
-            throw new Error("Must use callback function in consctructor.");
+            throw new Error("Must use callback function for single line complete updaterr.");
         }
+        if(typeof(lineCompleteFunc) !== "function")
+        {
+            throw new Error("Must use callback function for all lines complete fucntion.");
+        }
+        
+        const LINE_COUNT = 7;
+        
+        var lineCount = 0;
+        var lineErrors = 0;
+         
         var m_eclipse = null;
-        var callback = func;
+        var callback = lineUpdateFunc;
+        var linesComplete = lineCompleteFunc;
         var northPenumbraDone = false;
         var southPenumbraDone = false;
         
@@ -46,24 +57,28 @@ class LineWorkers
             switch (data.cmd)
             {
                 case 'eclipse_central_line_update':
+                    lineCount++;
                     callback({  type: 'central_line', 
                                 line: JSON.parse(data.line),
                                 times: JSON.parse(data.times)});
                     break;
                 
                 case 'eclipse_north_umbra_line_update':
+                    lineCount++;
                     callback({  type: 'north_umbra_line', 
                                 line: JSON.parse(data.line),
                                 times: JSON.parse(data.times)});
                     break;
                     
                 case 'eclipse_south_umbra_line_update':
+                    lineCount++;
                     callback({  type: 'south_umbra_line',
                                 line: JSON.parse(data.line),
                                 times: JSON.parse(data.times)});
                     break;
                     
                 case 'eclipse_south_penumbra_line_update':
+                    lineCount++;
                     southPenLine = data.line;
                     southPenumbraDone = true;                    
                     if(northPenumbraDone)
@@ -84,6 +99,7 @@ class LineWorkers
                     break;
                     
                 case 'eclipse_north_penumbra_line_update':
+                    lineCount++;
                     northPenLine = data.line;
                     northPenumbraDone = true;                    
                     if(southPenumbraDone)
@@ -104,6 +120,7 @@ class LineWorkers
                     break;
                     
                 case 'eclipse_east_penumbra_line_update':
+                    lineCount++;
                     callback({  type: 'east_penumbra_line',
                                 line: JSON.parse(data.line),
                                 times: JSON.parse(data.times)
@@ -111,6 +128,7 @@ class LineWorkers
                     break;
                     
                 case 'eclipse_west_penumbra_line_update':
+                    lineCount++;
                     callback({  type: 'west_penumbra_line',
                                 line: JSON.parse(data.line),
                                 times: JSON.parse(data.times)});
@@ -119,36 +137,55 @@ class LineWorkers
                 // ERROR CASES:    
                     
                 case 'eclipse_central_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: Central line error.");
                     break;
                 
                 case 'eclipse_north_umbra_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: North umbra line error.");
                     break;
                     
                 case 'eclipse_south_umbra_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: South ubmra line error.");
                     break;
                     
                 case 'eclipse_south_penumbra_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: South penumbra line error.");
                     break;
                     
                 case 'eclipse_north_penumbra_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: North penumbra line error.");
                     break;
                     
                 case 'eclipse_east_penumbra_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: East penumbra line error.");
                     break;
                     
                 case 'eclipse_west_penumbra_line_error':
+                    lineErrors++;
                     console.log("LINE WORKER: West penumbra line error.");
                     break;
                     
                 default:
+                    lineErrors++;
                     console.log("LINE WORKER: Invalid line command.");
                     break;                    
+            }
+            
+            if((lineCount + lineErrors) === LINE_COUNT)
+            {
+                if((lineCount - lineErrors) === 0)
+                {
+                    console.log("LINE ERROR: No lines drawn.");
+                }
+                
+                linesComplete(lineCount);
+                lineCount = lineErrors = 0;
             }
         }
          
@@ -397,8 +434,7 @@ class EclipseUI
         
         var calculateWorker = new Worker("calculateWorker.js");
         var shadowAnimator = new ShadowAnimator;
-        var lineWorkers = new LineWorkers(onEclipseLinesUpdate);
-        var lineCount = 0;
+        var lineWorkers = new LineWorkers(onEclipseLinesUpdate, onEclipseLinesComplete);
         
         
         calculateWorker.postMessage({'cmd': 'coords', 'coords': JSON.stringify(currentCoords)});
@@ -636,51 +672,57 @@ class EclipseUI
                 if (midTime)
                 {
                     displaySimMenuItems();
-
-                    if (c2Time)
-                    {
-                        displayCentralSimMenuItems();
-                        switch (simulationSelection)
-                        {
-                            case MID_SELECTION:
-                                goMidContactPoint();
-                                break;
-                            case C1_SELECTION:
-                                goC1ContactPoint();
-                                break;
-                            case C2_SELECTION:
-                                goC2ContactPoint();
-                                break;
-                            case C3_SELECTION:
-                                goC3ContactPoint();
-                                break;
-                            case C4_SELECTION:
-                                goC1ContactPoint();
-                            default:
-                                goMidConactPoint();
-                                break;
-                        }
-                    } else
-                    {
-                        hideCentralSimMenuItems();
-                        switch (simulationSelection)
-                        {
-                            case MID_SELECTION:
-                                goMidContactPoint();
-                                break;
-                            case C1_SELECTION:
-                                goC1ContactPoint();
-                                break;
-                            case C4_SELECTION:
-                                goC1ContactPoint();
-                            default:
-                                goMidContactPoint();
-                                break;
-                        }
-                    }
+                    setSimulationDisplay();                    
                 } else
                 {
                     noSimEclipse();
+                }
+            }
+        }
+        
+        function setSimulationDisplay()
+        {
+            if (c2Time)
+            {
+                displayCentralSimMenuItems();
+                switch (simulationSelection)
+                {
+                    case MID_SELECTION:
+                        goMidContactPoint();
+                        break;
+                    case C1_SELECTION:
+                        goC1ContactPoint();
+                        break;
+                    case C2_SELECTION:
+                        goC2ContactPoint();
+                        break;
+                    case C3_SELECTION:
+                        goC3ContactPoint();
+                        break;
+                    case C4_SELECTION:
+                        goC4ContactPoint();
+                        break;
+                    default:
+                        goMidConactPoint();
+                        break;
+                }
+            } else
+            {
+                hideCentralSimMenuItems();
+                switch (simulationSelection)
+                {
+                    case MID_SELECTION:
+                        goMidContactPoint();
+                        break;
+                    case C1_SELECTION:
+                        goC1ContactPoint();
+                        break;
+                    case C4_SELECTION:
+                        goC4ContactPoint();
+                        break;
+                    default:
+                        goMidContactPoint();
+                        break;
                 }
             }
         }
@@ -1618,7 +1660,6 @@ class EclipseUI
             currentEclipseRef = eclipseCatalog.getEclipse(selectedEclipse);
             stopShadowAnimation();
             shadowAnimator.reset();            
-            lineCount = 0;
             removeOldLines();
             var stringEclipse = JSON.stringify(currentEclipseRef);
             calculateWorker.postMessage({'cmd': 'eclipse', 'eclipse': stringEclipse});
@@ -1668,22 +1709,6 @@ class EclipseUI
             } 
         }
         
-        function onEclipseLinesError(data)
-        {
-            removeOldLines();
-            
-            var errorDiag = new DialogBox(  "Pardon Our Error",
-                                            "Unfortunately the eclipse circumstance lines could not be displayed for this eclipse. " +
-                                            "This usually occurs with a partial eclipse that only occurs near the poles. " +
-                                            "This is a known error and limatation. It is currently being investigated." +
-                                            "Circumstance data, timings, and simulations should still work.", 
-                                            "OK");
-            errorDiag.hideCloseButton();
-            
-            errorDiag.showModal();
-                   
-        }
-        
         function onEclipseLinesUpdate(data)
         {
             switch (data.type)
@@ -1692,41 +1717,34 @@ class EclipseUI
                     centralLine = map.addMultiPolyLine(data.line);
                     currentEclipseRef.setCentralLine(data.line);
                     currentEclipseRef.setCentralLineTimes(data.times);
-                    lineCount++;
                     break;
                 case 'south_umbra_line':
                     southernUmbraLine = map.addMultiPolyLine(data.line);
                     currentEclipseRef.setSouthUmbraLine(data.line);
                     currentEclipseRef.setSouthUmbraTimes(data.times);
-                    lineCount++;                    
                     break;
                 case 'north_umbra_line':
                     northernUmbraLine = map.addMultiPolyLine(data.line);
                     currentEclipseRef.setNorthUmbraLine(data.line);
                     currentEclipseRef.setNorthUmbraTimes(data.times);
-                    lineCount++;
                     break;
                 case 'south_penumbra_line':
                     southernPenumbraLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setSouthPenumbraLine(data.line);
-                    lineCount++;
                     break;
                 case 'north_penumbra_line':
                     northernPenumbraLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setNorthPenumbraLine(data.line);
-                    lineCount++;
                     break;
                 case 'east_penumbra_line':                    
                     eastEclipseLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setEastLimitLine(data.line);
                     currentEclipseRef.setEastLineTimes(data.times);
-                    lineCount++;
                     break;
                 case 'west_penumbra_line':
                     westEclipseLine = map.addMultiPolyLine(data.line, {stroke_color: 'red'});
                     currentEclipseRef.setWestLimitLine(data.line);
                     currentEclipseRef.setWestLineTimes(data.times);
-                    lineCount++;
                     break;
                 default:
                     console.log("Unknown or invalid line type returned from line workers.");
@@ -1734,11 +1752,17 @@ class EclipseUI
             }
             
             console.log(data.type + " line drawn."); 
+        }
+        
+        function onEclipseLinesComplete(lineCount)
+        {
+            console.log("Eclipse lines drawing now complete: " + lineCount);
             
-            if(lineCount === LINE_COUNT)
+            if(currentEclipseRef.getPointCount() > 10)
             {
                 connectLines();
                 shadowAnimator.setEclipse(currentEclipseRef);
+                currentEclipseRef.getEastLimitLine()
                 console.timeEnd("DrawLines");
                 animateShadowMenuItem.click(function(ev)
                 {
@@ -1750,6 +1774,7 @@ class EclipseUI
                             if (shadowAnimator.isAnimating())
                             {
                                 stopShadowAnimation();
+                                checkIfEclipseIsOccurring(true);
                             } 
                             else
                             {
@@ -1761,7 +1786,22 @@ class EclipseUI
                 });
                 
                 animateShadowMenuItem.removeAttr("disabled");
-            }                       
+            }
+            else
+            {
+                console.log("Not enough points");
+                removeOldLines();
+            
+                var errorDiag = new DialogBox(  "Pardon Our Error",
+                                                "Unfortunately the eclipse circumstance lines could not be displayed for this eclipse. " +
+                                                "This usually occurs with a partial eclipse that only occurs near the poles. " +
+                                                "This is a known error and limatation. It is currently being investigated." +
+                                                "Circumstance data, timings, and simulations should still work.", 
+                                                "OK");
+                errorDiag.hideCloseButton();
+
+                errorDiag.showModal();
+            }            
         }
         
         function connectLines()
@@ -1773,16 +1813,17 @@ class EclipseUI
             var eastLimitLine = currentEclipseRef.getEastLimitLine();
             var westLimitLine = currentEclipseRef.getWestLimitLine();
             var greatCircle = null;
+            var redLine = {stroke_color: 'red'};
             
             if(northUmbraLine && southUmbraLine)
             {
-                westUmbraLine = map.addGreatCircle(northUmbraLine[0], southUmbraLine[0]);
-                eastUmbraLine = map.addGreatCircle(northUmbraLine[northUmbraLine.length - 1], southUmbraLine[southUmbraLine.length - 1]);
+                westUmbraLine = map.addGreatCircle(northUmbraLine[0], southUmbraLine[0], redLine);
+                eastUmbraLine = map.addGreatCircle(northUmbraLine[northUmbraLine.length - 1], southUmbraLine[southUmbraLine.length - 1], redLine);
             }
             
             if(southPenumbraLine && westLimitLine)
             {
-                greatCircle = map.addGreatCircle(westLimitLine[0], southPenumbraLine[0]);
+                greatCircle = map.addGreatCircle(westLimitLine[0], southPenumbraLine[0], redLine);
                 
                 if(greatCircle)
                 {
@@ -1792,7 +1833,7 @@ class EclipseUI
             
             if(southPenumbraLine && eastLimitLine)
             {
-                greatCircle = map.addGreatCircle(southPenumbraLine[southPenumbraLine.length - 1], eastLimitLine[0]);
+                greatCircle = map.addGreatCircle(southPenumbraLine[southPenumbraLine.length - 1], eastLimitLine[0], redLine);
                 
                 if(greatCircle)
                 {
@@ -1802,7 +1843,7 @@ class EclipseUI
             
             if(eastLimitLine && northPenumbraLine)
             {
-                greatCircle = map.addGreatCircle(eastLimitLine[eastLimitLine.length - 1], northPenumbraLine[northPenumbraLine.length - 1]);
+                greatCircle = map.addGreatCircle(eastLimitLine[eastLimitLine.length - 1], northPenumbraLine[northPenumbraLine.length - 1], redLine);
 
                 if(greatCircle)
                 {
@@ -1812,7 +1853,7 @@ class EclipseUI
             
             if(northPenumbraLine && westLimitLine)
             {
-                greatCircle = map.addGreatCircle(northPenumbraLine[0], westLimitLine[westLimitLine.length - 1]);
+                greatCircle = map.addGreatCircle(northPenumbraLine[0], westLimitLine[westLimitLine.length - 1], redLine);
 
                 if(greatCircle)
                 {
@@ -1822,7 +1863,7 @@ class EclipseUI
             
             if(!northPenumbraLine && (westLimitLine && eastLimitLine))
             {
-                greatCircle = map.addGreatCircle(westLimitLine[westLimitLine.length - 1], eastLimitLine[eastLimitLine.length - 1]);
+                greatCircle = map.addGreatCircle(westLimitLine[westLimitLine.length - 1], eastLimitLine[eastLimitLine.length - 1], redLine);
 
                 if(greatCircle)
                 {
@@ -1832,7 +1873,7 @@ class EclipseUI
             
             if(!southPenumbraLine && (westLimitLine && eastLimitLine))
             {
-                greatCircle = map.addGreatCircle(westLimitLine[0], eastLimitLine[0]);
+                greatCircle = map.addGreatCircle(westLimitLine[0], eastLimitLine[0], redLine);
 
                 if(greatCircle)
                 {
@@ -2110,20 +2151,7 @@ class EclipseUI
                 
                 if(!shadowAnimator.isAnimating())
                 {
-                    switch(simulationSelection)
-                    {
-                        case MID_SELECTION:
-                            goMidContactPoint();
-                            break;
-                        case C1_SELECTION:
-                            goC1ContactPoint();
-                            break;
-                        case C4_SELECTION:
-                            goC1ContactPoint();
-                        default:
-                            goMidContactPoint();
-                            break;
-                    }
+                    setSimulationDisplay();
                 }
                 
                 if(material.getPageIndex() === SIM_PAGE_IDX)
@@ -2230,7 +2258,7 @@ class EclipseUI
             {
                 var current_date = new Date();
                 current_date.setTime(current_date.getTime() + dateOffset);
-                if (currentEclipseRef.isEclipseOccurring(current_date))
+                if (currentEclipseRef.isEclipseOccurring(current_date) && !shadowAnimator.isAnimating())
                 {
                     realtimeShadowMenuItem.show();
                     if(!bDontAnimate  && !shadowAnimator.isAnimating())
@@ -2630,6 +2658,8 @@ class EclipseUI
             }
             else if(error.code === error.POSITION_UNAVAILABLE)
             {
+                setLocationMode(true);
+                 
                 dialogBox.setDescriptionText("Location services are unavailable. Press Cancel to run location in manual mode.  Press retry to try again.");
                 dialogBox.setOKCallBack(function()
                 {
@@ -2909,14 +2939,7 @@ class EclipseUI
         this.init = function()
         {
             material.disableSwipe(1);
-            
-            /**
-            map.setView(START_COORDS, START_ZOOM);
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            **/
-            
+                       
             bindEvents();
             firstRun();
             checkZooms();

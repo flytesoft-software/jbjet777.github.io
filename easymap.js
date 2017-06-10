@@ -227,7 +227,7 @@ class EasyMap
          * @param {Position} pos2
          * @returns {EasyMap.addGreatCircle.polyLine|EasyMap@call | null}
          */
-        this.addGreatCircle = function(pos1, pos2)
+        this.addGreatCircle = function(pos1, pos2, options)
         {
             var coords = [];
             var generator = new arc.GreatCircle({x: pos1.longitude, y: pos1.latitude}, {x: pos2.longitude, y: pos2.latitude});
@@ -247,7 +247,7 @@ class EasyMap
             
             if(coords.length > 1)
             {
-                var polyLine = this.addPolyLine(coords);
+                var polyLine = this.addPolyLine(coords, options);
                                
                 return polyLine;
             }
