@@ -1068,15 +1068,12 @@ class EclipseUI
             mapOfflineButton.click(function()
             {
                 console.log("Attempt to restart online map.");
-                if(window.navigator.onLine)
+                tempIgnoreOfflineMap = true;
+                setOnlineMap();
+                 window.setTimeout(function()
                 {
-                    setOnlineMap();
-                }
-                else
-                {
-                    showToast("No connection available.");
-                }
-                
+                    tempIgnoreOfflineMap = false;
+                }, 500);
             });
             
             map.onTileLoadError(function()
@@ -1091,29 +1088,6 @@ class EclipseUI
                        tempIgnoreOfflineMap = false;
                    }, 1000);
                }
-            });
-            
-            if(window.navigator.onLine)
-            {
-                console.log("App is starting online.");
-                setOnlineMap();
-            }
-            else
-            {
-                console.log("App is starting offline.");
-                setOfflineMap();
-            }
-            
-            window.addEventListener("offline", function(event)
-            {
-               console.log("App is offline.");
-               setOfflineMap();
-            });            
-            
-            window.addEventListener("online", function(event)
-            {
-               console.log("App is online."); 
-               setOnlineMap();
             });
             
             material.onBeforePageChange(function(event)
@@ -1795,7 +1769,7 @@ class EclipseUI
                 var errorDiag = new DialogBox(  "Pardon Our Error",
                                                 "Unfortunately the eclipse circumstance lines could not be displayed for this eclipse. " +
                                                 "This usually occurs with a partial eclipse that only occurs near the poles. " +
-                                                "This is a known error and limatation. It is currently being investigated." +
+                                                "This is a known error and limitation. It is currently being investigated." +
                                                 "Circumstance data, timings, and simulations should still work.", 
                                                 "OK");
                 errorDiag.hideCloseButton();
@@ -2943,7 +2917,7 @@ class EclipseUI
             bindEvents();
             firstRun();
             checkZooms();
-            
+            setOnlineMap();            
             loadEclipseData();            
         };
     }
@@ -3086,6 +3060,8 @@ $(function()
     var eclipse = new EclipseUI;
     
     eclipse.init();
+    
+    console.log("VERSION: 001");
     
 });
 
