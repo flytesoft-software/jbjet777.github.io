@@ -216,7 +216,6 @@ jQuery.fn.extend(
     
         $(this).touchStart(function(event)
         {
-            console.log("Touch is starting");
             if(event.type === "mousedown")
             {
                 startX = event.pageX;

@@ -290,7 +290,6 @@ class MaterialAddons
         
         function onTouchEnd()
         {
-            console.log("Touch ended.");
             privPages.css({ position: '' }); // Delete position value if it was used during swipe event.
             drawerToggleCalled = false;
             swipeOccurring = false;
@@ -934,12 +933,26 @@ class DialogBox
         
         this.show = function()
         {
-            dialog[0].show();
+            try
+            {
+                dialog[0].show();
+            }
+            catch(error)
+            {
+                console.log("Show dialog already called.");
+            }
         };
         
         this.showModal = function()
         {
-            dialog[0].showModal();
+            try
+            {
+                dialog[0].showModal();
+            }
+            catch(error)
+            {
+                console.log("Dialog already open.");
+            }
         };
         
         this.setTitleText = function(/* String */ text)

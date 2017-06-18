@@ -942,11 +942,8 @@ function PlanetPositionsAC()
         // var now = new Date().getTime() / 86400000 + 2440587.5; // Julian day
         // var days = inDate.getTime() - epochDate.getTime();
         var days = inDate.getTime() / 86400000 - 10956;
-        
-        console.log("Test days ready.");
-        
+       
         deltaT = getDeltaT(inDate);
-        console.log("Delta T: " + deltaT);
         
         deltaT /= 86400.0; // deltaT in days;
         
@@ -1984,11 +1981,6 @@ function PlanetPositionsAC()
      */
     function getLunarEclipLatitude()
     {
-        // D - 0
-        // M - 1
-        // Mdash - 2
-        // F - 3
-        
         var lunarCOF3 = getLunarCo3();
         var lunarCOF4 = getLunarCo4();
         var coCount = lunarCOF3.length;
@@ -2023,9 +2015,7 @@ function PlanetPositionsAC()
         lat -= 115 * sin(rev(L + M));
             
         lat /= 1000000.0;
-        
-        console.log("Lunar ecliptic latitude: " + lat);
-            
+           
         return lat;
     }
     
@@ -2068,8 +2058,6 @@ function PlanetPositionsAC()
          
         var long = rev(L + deltaLong / 1000000.0 + dLongNutation);
         
-        console.log("Lunar eclipltic long: " + long);
-        
         return long;
     }
     
@@ -2078,10 +2066,6 @@ function PlanetPositionsAC()
      */
     function getLunarRadialDistance()
     {
-        // D - 0
-        // M - 1
-        // Mdash - 2
-        // F - 3
         var deltaR = 0.0;
         var deltaDeltaR = 0.0;
         var lunarCOF1 = getLunarCo1();
@@ -2238,8 +2222,6 @@ function PlanetPositionsAC()
             this.setDate(new Date());
         }
         
-        console.log("Getting Moon position.");
-        
         if(false)
         {
             var newEclipCoords =  {
@@ -2250,8 +2232,6 @@ function PlanetPositionsAC()
             
             oblec = 23.43929111111111;
             var moonDist = getDistance(newEclipCoords.x, newEclipCoords.y, newEclipCoords.z);
-            
-            console.log("New MOON distance: " + moonDist);
             
         }
         else
@@ -2282,9 +2262,7 @@ function PlanetPositionsAC()
         var altEl = getAltEl(lunarHourAngle, lunarTopRADecl.top_decl, latitude);
         
         var angularDiamter = getAngularDiameter(LUNAR_DIAMETER, lunarTopRADecl.top_dist);
-        
-        console.log("Moon position ready.");
-        
+      
         return {
             "ra": lunarTopRADecl.top_ra,
             "decl": lunarTopRADecl.top_decl,
@@ -2327,8 +2305,6 @@ function PlanetPositionsAC()
             
             var sunR = getDistance(sunEclipCoords.x, sunEclipCoords.y, sunEclipCoords.z);
             oblec = 23.43929111111111;
-            
-            console.log("New SUN distance: " + sunR);
         }
         else
         {
@@ -2369,8 +2345,6 @@ function PlanetPositionsAC()
         
         var sunAltEl = getAltEl(hourAngle, sunTopRADecl.top_decl, latitude);
         
-        console.log("SUN POSITION READY");
-                
         return {
             "ra": sunTopRADecl.top_ra,
             "decl": sunTopRADecl.top_decl,

@@ -528,10 +528,9 @@ class EclipseUI
             {
                 window.localStorage.setItem(RUN_BEFORE, "true");
                 
-                var warningBox = new DialogBox(  "WARNING!!!",
-                                                "Never look at the Sun, eclipsed or not, without proper and certificated eye protection.  \n\
-                                                Looking at the Sun without such protection will result in permanent eye damage and possible blindness.  \n\
-                                                100% UVA/UVB sunglasses do <u>NOT</u> provide eye protection for looking at the Sun.");
+                var warningBox = new DialogBox(  "Welcome!",
+                                                "Welcome to the Eclipse Explorer App, may your skies be clear! " +
+                                                "Never look at the Sun, eclipsed or not, without proper and certificated eye protection. " );
                                                 
                 warningBox.hideCloseButton();
                 
@@ -958,12 +957,7 @@ class EclipseUI
         function bindEvents()
         {
             console.log("Binding Eclipse UI events.");
-            
-            window.setInterval(function()
-            {
-                // updateMoonPosition();
-            }, 1000);
-            
+                      
             window.setInterval(checkLocalTimeZone, 30000);
             
             helpInfo.click(collapseAboutPageSections);
@@ -1078,7 +1072,7 @@ class EclipseUI
             
             map.onTileLoadError(function()
             {
-               if(!tempIgnoreOfflineMap  && map.isMapOnline())
+                if(!tempIgnoreOfflineMap  && map.isMapOnline())
                {
                    tempIgnoreOfflineMap = true;
                    console.log("Map possibly gone offline.");
@@ -1958,6 +1952,10 @@ class EclipseUI
                 
                 if(selectedTimeZone)
                 {
+                    if(selectedTimeZone.substr(0, 3) === "Etc") // TODO: Fix "Etc" timezones, not supported in Chrome?
+                    {
+                        selectedTimeZone = "UTC";
+                    }
                     zone_options = { timeZone: selectedTimeZone, timeZoneName: 'short' };
                 }
                 
@@ -2354,10 +2352,16 @@ class EclipseUI
 
             if(selectedTimeZone)
             {
+                if(selectedTimeZone.substr(0, 3) === "Etc") // TODO: Fix "Etc" timezones, not supported in Chrome?
+                {
+                    selectedTimeZone = "UTC";
+                }
                 zone_options = { timeZone: selectedTimeZone, timeZoneName: 'short' };
             }
             
             var timeString = current_date.toLocaleTimeString(TIME_LOCALE, zone_options);
+            
+            
             var zoneString = timeString.slice(-3);
             timeString = timeString.slice(0, -4);
             timeID.html(timeString);
@@ -2514,7 +2518,14 @@ class EclipseUI
             currentCoords = coords;
             if(currentCoords.altitude)
             {
-                currentAltitude = currentCoords.altitude;
+                if(currentCoords.altitude === 1)
+                {
+                    currentAltitude = 0;
+                }
+                else
+                {
+                    currentAltitude = currentCoords.altitude;
+                }                
             }
             
             var localCoords = {
@@ -2595,6 +2606,7 @@ class EclipseUI
                     if(!longCickFired)
                     {
                         console.log("Clicked at: " + position.latitude + ", " + position.longitude);
+                        position.altitude = 1;
                         setLocation(position);
                     }
                     else
@@ -2714,20 +2726,28 @@ class EclipseUI
          */
         function showToast(/*String */ msg)
         {
-            var closeToast = function ()
-            {
-                // notification.MaterialSnackbar.cleanup_();
-                snackBar.classList.remove("mdl-snackbar--active");
-            };
+            try
+                {
+                var closeToast = function ()
+                {
+                    // notification.MaterialSnackbar.cleanup_();
+                    snackBar.classList.remove("mdl-snackbar--active");
+                };
 
-            snackBar.MaterialSnackbar.showSnackbar(
-                    {
-                        message: msg,
-                        timeout: TOAST_TIMEOUT,
-                        actionText: "Dismiss",
-                        actionHandler: closeToast
-                    }
-            );
+                snackBar.MaterialSnackbar.showSnackbar(
+                        {
+                            message: msg,
+                            timeout: TOAST_TIMEOUT,
+                            actionText: "Dismiss",
+                            actionHandler: closeToast
+                        }
+                );
+            }
+            catch(error)
+            {
+                console.log("Toast: " + msg);
+                console.log("Unable to show toast, MDL probably not yet ready.");
+            }
         }
         
         function killAnimateWorker()
@@ -2830,8 +2850,6 @@ class EclipseUI
         {
             var displaySunWidth = sun.width();
             
-            console.log("Sun width: " + displaySunWidth);
-            
             var moonPixelCenter = sun.offset();
             var moonWidth = displaySunWidth;
             
@@ -2919,6 +2937,11 @@ class EclipseUI
             checkZooms();
             setOnlineMap();            
             loadEclipseData();            
+        };
+        
+        this.forceResize = function()
+        {
+            setPageHeights();
         };
     }
 };
@@ -3056,13 +3079,16 @@ class WatchPosition
 };
 
 $(function()
-{
+{   
     var eclipse = new EclipseUI;
     
     eclipse.init();
     
-    console.log("VERSION: 001");
+    $.getScript("ad_script.js");
     
+    console.log("VERSION: 011");    
 });
+
+
 
 
