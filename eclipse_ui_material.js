@@ -2617,6 +2617,7 @@ class EclipseUI
                 
                 locationIcon.html("location_off");
                 showToast("Position in manual mode.");
+                console.log("Position in mnaula mode.");
             }
         }
         
@@ -2644,7 +2645,7 @@ class EclipseUI
             }
             else if(error.code === error.POSITION_UNAVAILABLE)
             {
-                setLocationMode(true);
+                setLocationMode(false);
                  
                 dialogBox.setDescriptionText("Location services are unavailable. Press Cancel to run location in manual mode.  Press retry to try again.");
                 dialogBox.setOKCallBack(function()
